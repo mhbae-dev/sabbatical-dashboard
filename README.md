@@ -1,6 +1,6 @@
 # Sabbatical 2026–27 dashboard
 
-A static web page that reads `Sabbatical_Plan_and_Budget.xlsx` and shows it as a tabbed dashboard: Overview, Food, Stays, Flights and Budget. All the figures are calculated in your browser straight from the spreadsheet, so the spreadsheet stays the single source of truth. There's no server and no build step.
+A static web page that reads `Sabbatical_Plan_and_Budget.xlsx` and shows it as a tabbed dashboard: Daily, Overview, Stays, Flights and Budget. All the figures are calculated in your browser straight from the spreadsheet, so the spreadsheet stays the single source of truth. There's no server and no build step.
 
 ## Files
 
@@ -10,6 +10,7 @@ A static web page that reads `Sabbatical_Plan_and_Budget.xlsx` and shows it as a
 | `vendor/xlsx.full.min.js` | SheetJS 0.20.3, which reads .xlsx files in the browser (Apache 2.0) |
 | `Sabbatical_Plan_and_Budget.xlsx` | A copy of your spreadsheet that the page reads |
 | `update.sh` | Copies the latest spreadsheet in and pushes it to GitHub |
+| `spend-log.json` | Created automatically the first time you log a spend from the Daily tab |
 
 ## Put it on GitHub Pages
 
@@ -31,9 +32,27 @@ Edit the spreadsheet as usual, save it, then run `./update.sh` in this folder (o
 
 **Open a file…** (or dragging an .xlsx onto the page) shows a spreadsheet from your computer without uploading it. That's handy for checking changes before you push them.
 
+## Logging daily spends (Daily tab)
+
+The Daily tab shows today's budget: food + local transport + activities & other, taken from the Itinerary for the stop you're at. It also shows how much of it is left. Add what you spend with **Log a spend**. Amounts in local currency are converted to £ with the rates under *Exchange rates*.
+
+Spends are saved to `spend-log.json` in this repository, separate from the spreadsheet. They count towards *Committed* on the Overview and Budget tabs.
+
+To log from a device, set it up once:
+
+1. On GitHub, go to **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
+2. Set **Repository access** to *Only select repositories*, and pick this repo.
+3. Under **Repository permissions**, set **Contents** to *Read and write*.
+4. Pick an expiry after you're home, generate the token and copy it.
+5. On the site, open **Daily → Logging setup**, paste the token and tap **Save & connect**.
+
+The token is stored only in that phone's browser. If you're offline, spends are kept on the phone and sync when you're back online. To delete an entry, tap **×** next to it and then confirm.
+
+Because the phone writes to the repo, run `git pull` before working in this folder on your Mac. `update.sh` already does this.
+
 ## Privacy
 
-On a **public** repository, anyone with the link can see the page *and* download the spreadsheet: your budget, hotel names, booking refs and phone numbers. The page asks search engines not to index it, but that isn't protection. For a private site, you can either:
+On a **public** repository, anyone with the link can see the page *and* download the spreadsheet and `spend-log.json`: your budget, hotel names, booking refs and phone numbers. The page asks search engines not to index it, but that isn't protection. For a private site, you can either:
 
 - use a private repository (GitHub Pages on private repos needs GitHub Pro, Team or Enterprise), or
 - keep the spreadsheet out of the repo and use **Open a file…** each time. The page works the same, and your data never leaves your computer.

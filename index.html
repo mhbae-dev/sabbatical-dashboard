@@ -47,8 +47,8 @@
 
   <div id="app" class="panel" hidden>
   <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+    <button class="tab" role="tab" id="tab-daily" aria-controls="p-daily" data-tab="daily">Daily</button>
     <button class="tab" role="tab" id="tab-overview" aria-controls="p-overview" data-tab="overview">Overview</button>
-    <button class="tab" role="tab" id="tab-food" aria-controls="p-food" data-tab="food">Food</button>
     <button class="tab" role="tab" id="tab-stays" aria-controls="p-stays" data-tab="stays">Stays</button>
     <button class="tab" role="tab" id="tab-flights" aria-controls="p-flights" data-tab="flights">Flights</button>
     <button class="tab" role="tab" id="tab-budget" aria-controls="p-budget" data-tab="budget">Budget</button>
@@ -70,19 +70,64 @@
     </div>
   </section>
 
-  <!-- FOOD -->
-  <section class="panel" role="tabpanel" id="p-food" aria-labelledby="tab-food" hidden>
-    <div class="food-top" id="food-top"></div>
-    <section class="card" aria-labelledby="h-food">
-      <div class="card-head"><h2 id="h-food">Daily food allowance, stop by stop</h2><span class="sub">Hover a step for local currency</span></div>
-      <div id="food-chart-wrap" style="min-width:0"></div>
+  <!-- DAILY -->
+  <section class="panel" role="tabpanel" id="p-daily" aria-labelledby="tab-daily" hidden>
+    <div class="day-nav" id="day-nav"></div>
+    <div class="day-grid">
+      <section class="card day-main" aria-label="Today's budget">
+        <div class="day-hero" id="day-hero"></div>
+        <div class="dcats" id="day-cats"></div>
+      </section>
+      <section class="card" aria-labelledby="h-log">
+        <div class="card-head" style="margin-bottom:12px"><h2 id="h-log">Log a spend</h2></div>
+        <form id="log-form" class="log-form" autocomplete="off">
+          <div class="amt-row">
+            <label class="sr" for="log-amt">Amount</label>
+            <input id="log-amt" type="number" inputmode="decimal" step="any" min="0" placeholder="Amount">
+            <label class="sr" for="log-cur">Currency</label>
+            <select id="log-cur"></select>
+          </div>
+          <div class="gbp-preview" id="log-gbp" aria-live="polite"></div>
+          <fieldset class="seg-ctl"><legend class="sr">Category</legend>
+            <input type="radio" name="log-cat" id="cat-food" value="food" checked><label for="cat-food">Food</label>
+            <input type="radio" name="log-cat" id="cat-transport" value="transport"><label for="cat-transport">Transport</label>
+            <input type="radio" name="log-cat" id="cat-other" value="other"><label for="cat-other">Activities &amp; other</label>
+          </fieldset>
+          <label class="sr" for="log-note">Note</label>
+          <input id="log-note" type="text" maxlength="120" placeholder="What was it? (optional)">
+          <div class="log-actions">
+            <label class="date-lab" for="log-date">Date <input id="log-date" type="date"></label>
+            <button type="submit" class="btn">Add</button>
+          </div>
+          <div class="log-msg" id="log-msg" aria-live="polite"></div>
+        </form>
+        <h3 class="entries-h">Spent this day</h3>
+        <ul class="entries" id="day-entries"></ul>
+        <div class="sync-status" id="sync-status" aria-live="polite"></div>
+      </section>
+    </div>
+    <div class="food-top" id="trip-stats"></div>
+    <section class="card" aria-labelledby="h-dchart">
+      <div class="card-head"><h2 id="h-dchart">Daily budget vs what you spent</h2><span class="sub">Line = daily budget · bars = logged spending · tap a day to open it</span></div>
+      <div id="daily-chart-wrap" style="min-width:0"></div>
     </section>
     <section class="card">
-      <div class="tbl-wrap"><table id="food-table"></table></div>
-      <details class="rates" id="rates" style="margin-top:14px">
-        <summary>Exchange rates used for local amounts</summary>
-        <p style="margin:8px 0 0">Approximate mid-market rates, £1 = … Change them here if they move; saved in this browser only.</p>
+      <div class="card-head"><h2>Daily budget by stop</h2><span class="sub">Food + transport + activities &amp; other, per day. Accommodation not included</span></div>
+      <div class="tbl-wrap"><table id="daily-table"></table></div>
+      <details class="rates" style="margin-top:14px">
+        <summary>Exchange rates</summary>
+        <p style="margin:8px 0 0">Approximate rates, £1 = … Used to convert what you log into pounds. Saved on this device.</p>
         <div class="rates-grid" id="rates-grid"></div>
+      </details>
+      <details class="rates" id="gh-setup" style="margin-top:10px">
+        <summary>Logging setup</summary>
+        <p style="margin:8px 0 0">Spends are saved to <code>spend-log.json</code> in your GitHub repository. To add them from this device, paste a fine-grained GitHub access code with <b>Contents: read &amp; write</b> on this repository only. It stays on this device and is never put on the site.</p>
+        <div class="gh-grid">
+          <label for="gh-repo">Repository <input id="gh-repo" type="text" placeholder="owner/name" spellcheck="false"></label>
+          <label for="gh-token">Access code <input id="gh-token" type="password" placeholder="github_pat_…" spellcheck="false" autocomplete="off"></label>
+          <div class="log-actions"><button type="button" class="btn" id="gh-save">Save &amp; connect</button><button type="button" class="linkbtn" id="gh-forget">Remove from this device</button></div>
+          <div class="log-msg" id="gh-msg" aria-live="polite"></div>
+        </div>
       </details>
     </section>
   </section>

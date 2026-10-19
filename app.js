@@ -8,20 +8,21 @@ const gbp = (n,dp) => { const d = dp ?? (Math.abs(n%1)>0.001 ? 2 : 0); return (n
 const sum = (a,f) => a.reduce((t,x)=>t+(f(x)||0),0);
 const D = iso => new Date(iso+"T00:00:00");
 const fmtD = (iso,o={day:"numeric",month:"short"}) => D(iso).toLocaleDateString("en-GB",o);
-const addD = (iso,n) => { const d=D(iso); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const addD = (iso,n) => { const d=new Date(iso+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
 const short = w => String(w||"").split(" – ")[0].split(" · ")[0].split(" (")[0];
 const code = s => (String(s||"").match(/\b[A-Z]{3}\b/)||[""])[0];
 const now = new Date(); const today = new Date(now.getFullYear(),now.getMonth(),now.getDate());
 const $ = id => document.getElementById(id);
 
 // ---------- tabs
-const TABS = ["overview","food","stays","flights","budget"];
+const TABS = ["daily","overview","stays","flights","budget"];
 function showTab(t, focus){
-  if(!TABS.includes(t)) t = "overview";
+  if (t==="food") t = "daily";
+  if(!TABS.includes(t)) t = "daily";
   document.querySelectorAll(".tab").forEach(b=>{ const on=b.dataset.tab===t; b.setAttribute("aria-selected",on); b.tabIndex = on?0:-1; if(on&&focus) b.focus(); });
   TABS.forEach(x=>$("p-"+x).hidden = x!==t);
   currentTab = t; try{ localStorage.setItem("sabbatical-tab",t); }catch(e){} try{ history.replaceState(null,"","#"+t); }catch(e){}
-  if (t==="food" && MODEL) renderFood(MODEL);
+  if (t==="daily" && MODEL) renderDaily(MODEL);
 }
 document.querySelector(".tabs").addEventListener("click",e=>{ const b=e.target.closest(".tab"); if(b) showTab(b.dataset.tab); });
 document.querySelector(".tabs").addEventListener("keydown",e=>{
@@ -49,13 +50,15 @@ function build(doc){
     "Flights": sum(flights,f=>f.cost), "Accommodation": sum(stops,s=>s.acc), "Food": sum(stops,s=>s.food),
     "Local transport": sum(stops,s=>s.trans), "Activities": sum(stops,s=>s.act), "Insurance & admin": sum(d.admin,a=>a.amt)
   };
-  const committed={}; CATS.forEach(c=>committed[c.k]=sum(d.spend.filter(s=>s.cat===c.k),s=>s.amt));
+  const LOG = logEntries();
+  const committed={}; CATS.forEach(c=>committed[c.k]=sum(d.spend.filter(s=>s.cat===c.k),s=>s.amt) + sum(LOG.filter(e=>DCAT[e.cat]?.budgetCat===c.k),e=>e.gbp));
   const other = sum(d.spend.filter(s=>!CATS.some(c=>c.k===s.cat)),s=>s.amt);
   const totalPlan = sum(CATS,c=>planned[c.k]);
-  const totalCommitted = sum(d.spend,s=>s.amt);
+  const logTotal = sum(LOG,e=>e.gbp);
+  const totalCommitted = sum(d.spend,s=>s.amt) + logTotal;
   const nights = sum(stops,s=>s.nights);
   return {doc, d, budget:d.budget, stops, flights, groups, planned, committed, other, totalPlan, totalCommitted,
-    buffer:d.budget-totalPlan, nights, ground:sum(stops,s=>s.total)};
+    buffer:d.budget-totalPlan, nights, logTotal, logCount:LOG.length, ground:sum(stops,s=>s.total)};
 }
 
 // ---------- render
@@ -63,7 +66,7 @@ let MODEL = null;
 function render(M){
   MODEL = M;
   renderHeader(M); renderOverview(M); renderStays(M); renderFlights(M); renderBudget(M);
-  if (!$("p-food").hidden) renderFood(M);
+  if (!$("p-daily").hidden) renderDaily(M);
 }
 
 function renderHeader(M){
@@ -117,85 +120,302 @@ function renderOverview(M){
     row("Budget committed", Math.round(M.totalCommitted), Math.round(M.totalPlan), `${gbp(M.totalCommitted)} paid or booked of the ${gbp(Math.round(M.totalPlan),0)} plan`, "--accent").replace(/(\d+) of (\d+)<\/span>/, `${Math.round(M.totalCommitted/M.totalPlan*100)}%</span>`);
 }
 
-// ---------- food
+// ---------- daily budget
 const DEFAULT_RATES = {KRW:1790, JPY:208, VND:34430, THB:44.4, MYR:5.4, SGD:1.69, TWD:42.1};
-const CUR = {KRW:{sym:"₩",step:500},JPY:{sym:"¥",step:100},VND:{sym:"₫",step:5000},THB:{sym:"฿",step:10},MYR:{sym:"RM",step:1},SGD:{sym:"S$",step:1},TWD:{sym:"NT$",step:10}};
+const CUR = {GBP:{sym:"£",step:0.01},KRW:{sym:"₩",step:500},JPY:{sym:"¥",step:100},VND:{sym:"₫",step:5000},THB:{sym:"฿",step:10},MYR:{sym:"RM",step:1},SGD:{sym:"S$",step:1},TWD:{sym:"NT$",step:10}};
 const COUNTRY_CUR = {"Korea":["KRW"],"Japan":["JPY"],"Vietnam":["VND"],"Thailand":["THB"],"Malaysia & Singapore":["MYR"],"Taiwan":["TWD"]};
 let RATES = {...DEFAULT_RATES};
 try { const saved = JSON.parse(localStorage.getItem("sabbatical-rates")||"null"); if (saved) RATES = {...RATES, ...saved}; } catch(e){}
-const local = (g, c) => { const x=CUR[c]; if(!x) return ""; const v=Math.round(g*RATES[c]/x.step)*x.step; return x.sym+v.toLocaleString("en-GB"); };
-const localAll = s => s.cur.map(c=>local(s.foodD,c)).join(" · ");
+const rate = c => c==="GBP" ? 1 : RATES[c];
+const local = (g, c) => { const x=CUR[c]; if(!x || c==="GBP") return ""; const v=Math.round(g*RATES[c]/x.step)*x.step; return x.sym+v.toLocaleString("en-GB"); };
+const localOf = (g, s) => (s?.cur||[]).map(c=>local(g,c)).filter(Boolean).join(" · ");
+const fmtLocal = (amt, c) => (CUR[c]?.sym||c+" ") + Number(amt).toLocaleString("en-GB",{maximumFractionDigits: c==="GBP"?2:0});
 
-function renderFood(M){
-  const S=M.stops, nights=M.nights, foodBudget=M.planned.Food, foodSpent=M.committed.Food;
-  const tripStart = D(S[0].start);
-  const dayIdx = Math.floor((today - tripStart)/864e5);
-  const inTrip = dayIdx >= 0 && dayIdx < nights;
-  const daysLeft = inTrip ? nights - dayIdx : (dayIdx < 0 ? nights : 0);
-  const stopAt = d => { let a=0; for (const s of S){ if (d < a + s.nights) return s; a += s.nights; } return S[S.length-1]; };
-  const current = inTrip ? stopAt(dayIdx) : S[0];
-  const avg = foodBudget/nights;
-  const lo = Math.min(...S.map(s=>s.foodD)), hi = Math.max(...S.map(s=>s.foodD));
-  const names = v => [...new Set(S.filter(s=>s.foodD===v).map(s=>short(s.where)))].join(", ");
-  const pace = daysLeft>0 ? (foodBudget-foodSpent)/daysLeft : 0;
-  $("food-top").innerHTML = `
-    <div class="fstat hero"><div class="eyebrow">${inTrip?"Today's allowance":"Your first allowance"}</div>
-      <div class="v">${gbp(current.foodD)}<small> / day</small></div>
-      <div class="loc">≈ ${localAll(current)}</div>
-      <div class="n">${esc(short(current.where))}, ${esc(current.country)}${inTrip?"":" · from "+fmtD(current.start)}</div></div>
-    <div class="fstat"><div class="eyebrow">Trip average</div>
-      <div class="v">${gbp(avg,2)}<small> / day</small></div>
-      <div class="n">${gbp(foodBudget)} food budget over ${nights} days</div></div>
-    <div class="fstat"><div class="eyebrow">Range</div>
-      <div class="v">${gbp(lo)}–${gbp(hi)}<small> / day</small></div>
-      <div class="n">Lowest in ${esc(names(lo))} · highest in ${esc(names(hi))}</div></div>
-    <div class="fstat"><div class="eyebrow">Food spent so far</div>
-      <div class="v">${gbp(foodSpent)}<small> of ${gbp(foodBudget)}</small></div>
-      <div class="n">${daysLeft>0?`To stay on budget: ${gbp(pace,2)}/day for the ${daysLeft} days ${inTrip?"left":"of the trip"}`:"Trip complete"}</div></div>`;
+// Daily categories: the three ground-cost lines you spend day to day
+const DCATS = [
+  {k:"food", label:"Food", c:"--c3", budgetCat:"Food"},
+  {k:"transport", label:"Transport", c:"--c4", budgetCat:"Local transport"},
+  {k:"other", label:"Activities & other", c:"--c5", budgetCat:"Activities"}
+];
+const DCAT = Object.fromEntries(DCATS.map(c=>[c.k,c]));
 
-  const wrap = $("food-chart-wrap");
-  const W = Math.max(320, wrap.clientWidth||900), H = 230, m = {l:40,r:12,t:24,b:40};
-  const iw = W-m.l-m.r, ih = H-m.t-m.b, yMax = Math.max(35, Math.ceil((hi+5)/10)*10);
-  const X = d => m.l + d/nights*iw, Y = v => m.t + ih - v/yMax*ih;
-  let g = `<svg class="fchart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Food allowance per day across the trip">`;
-  for (let v=0; v<=yMax; v+=10) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${m.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">£${v}</text>`;
-  let a=0, path=`M${X(0)},${Y(0)}`, line=""; const steps=[];
-  S.forEach((s,i)=>{ const x0=X(a), x1=X(a+s.nights), y=Y(s.foodD); path+=` L${x0},${y} L${x1},${y}`; line+=(i?` L${x0},${y}`:`M${x0},${y}`)+` L${x1},${y}`; steps.push({s,x0,x1}); a+=s.nights; });
-  path += ` L${X(nights)},${Y(0)} Z`;
-  g += `<path d="${path}" fill="var(--c3)" fill-opacity=".2" stroke="none"/><path d="${line}" fill="none" stroke="var(--c3)" stroke-width="2.5" stroke-linejoin="round"/>`;
-  g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(avg)}" y2="${Y(avg)}" stroke="var(--ink-2)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
-  g += `<text x="${m.l+6}" y="${Y(avg)+14}" font-size="11" font-weight="600" fill="var(--ink-2)" stroke="var(--surface)" stroke-width="3" paint-order="stroke">average ${gbp(avg,2)}</text>`;
-  steps.forEach(st=>{
-    const w=st.x1-st.x0, s=st.s, cx=(st.x0+st.x1)/2;
-    const tip = `<b>${esc(s.where)}</b>${esc(s.country)} · ${s.nights} night${s.nights>1?"s":""}<br>Food: ${gbp(s.foodD)}/day ≈ ${localAll(s)}<br>${gbp(s.food)} for the stay${s.meal?"<br>"+s.meal:""}`;
-    g += `<g class="step" tabindex="0" data-tip="${esc(tip)}"><rect class="hit" x="${st.x0}" y="${m.t}" width="${w}" height="${ih}" fill="transparent"/>`;
-    if (w >= 24) g += `<text x="${cx}" y="${Y(s.foodD)-7}" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--ink)" stroke="var(--surface)" stroke-width="3" paint-order="stroke">£${s.foodD}</text>`;
-    g += `</g>`;
+function tripDays(M){
+  const days=[]; M.stops.forEach(s=>{ for(let i=0;i<s.nights;i++){
+    const allow = {food:s.foodD, transport:s.trans/s.nights, other:s.act/s.nights};
+    days.push({date:addD(s.start,i), stop:s, i, allow, total:allow.food+allow.transport+allow.other});
+  }}); return days;
+}
+const isoToday = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+let SEL = null;
+
+function dayActuals(date){
+  const out={food:0,transport:0,other:0,total:0,entries:[]};
+  logEntries().filter(e=>e.date===date).forEach(e=>{ out[e.cat]=(out[e.cat]||0)+e.gbp; out.total+=e.gbp; out.entries.push(e); });
+  return out;
+}
+
+function renderDaily(M){
+  const days = tripDays(M);
+  if (!days.length) return;
+  const T = isoToday();
+  const first=days[0].date, last=days[days.length-1].date;
+  if (!SEL) SEL = T<first ? first : T>last ? last : T;
+  SEL = SEL<first?first:SEL>last?last:SEL;
+  const dayIdx = days.findIndex(d=>d.date===SEL), day = days[dayIdx], s = day.stop;
+  const act = dayActuals(SEL);
+  const left = day.total - act.total;
+  const relative = SEL===T ? "Today" : SEL===addD(T,-1) ? "Yesterday" : SEL===addD(T,1) ? "Tomorrow" : fmtD(SEL,{weekday:"long"});
+
+  $("day-nav").innerHTML = `
+    <button type="button" class="navbtn" id="day-prev" aria-label="Previous day" ${dayIdx===0?"disabled":""}>‹</button>
+    <div class="day-title"><b>${relative}</b><span>${fmtD(SEL,{weekday:"short",day:"numeric",month:"short"})} · ${esc(short(s.where))}, ${esc(s.country)} · night ${day.i+1} of ${s.nights}</span></div>
+    <button type="button" class="navbtn" id="day-next" aria-label="Next day" ${dayIdx===days.length-1?"disabled":""}>›</button>
+    ${SEL!==T && T>=first && T<=last ? `<button type="button" class="linkbtn" id="day-today">Today</button>` : ""}`;
+  $("day-prev")?.addEventListener("click",()=>{ SEL=days[Math.max(0,dayIdx-1)].date; renderDaily(M); });
+  $("day-next")?.addEventListener("click",()=>{ SEL=days[Math.min(days.length-1,dayIdx+1)].date; renderDaily(M); });
+  $("day-today")?.addEventListener("click",()=>{ SEL=T; renderDaily(M); });
+
+  const over = left < 0;
+  $("day-hero").innerHTML = `
+    <div class="eyebrow">${over?"Over today's budget by":"Left to spend"}</div>
+    <div class="big ${over?"neg":""}">${gbp(Math.abs(left),2)}</div>
+    <div class="loc">${localOf(Math.abs(left), s) ? "≈ "+localOf(Math.abs(left), s) : ""}</div>
+    <div class="n">${gbp(day.total,2)} daily budget · ${gbp(act.total,2)} spent${s.meal?` · <span class="meal">${s.meal}</span>`:""}</div>`;
+  $("day-cats").innerHTML = DCATS.map(c=>{
+    const a=day.allow[c.k], sp=act[c.k]||0, pct=a>0?Math.min(100,sp/a*100):(sp>0?100:0), o=sp>a+0.005;
+    return `<div class="dcat"><div class="top"><span><i style="background:var(${c.c})"></i>${c.label}</span><span class="num"><b class="${o?"neg":""}">${gbp(sp,2)}</b> of ${gbp(a,2)}</span></div>
+      <div class="meter"><div style="width:${pct}%;background:var(${o?"--crit":c.c})"></div></div>
+      <div class="n">${o?`${gbp(sp-a,2)} over`:`${gbp(a-sp,2)} left`}${localOf(Math.max(0,a-sp),s)&&!o?` ≈ ${localOf(a-sp,s)}`:""}</div></div>`;
+  }).join("");
+
+  // entries for the day
+  $("day-entries").innerHTML = act.entries.length ? act.entries.sort((a,b)=>(a.ts||"").localeCompare(b.ts||"")).map(e=>`
+    <li><span class="sw" style="background:var(${DCAT[e.cat]?.c||"--muted"})"></span><span class="what">${esc(e.note||DCAT[e.cat]?.label||"")}<small>${DCAT[e.cat]?.label||""}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.pending?" · waiting to sync":""}</small></span><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
+    : `<li class="note">Nothing logged for this day yet.</li>`;
+
+  // form defaults
+  const curSel = $("log-cur"); const curs = [...new Set([...(s.cur||[]), "GBP"])];
+  const prevCur = curSel.value;
+  curSel.innerHTML = curs.map(c=>`<option value="${c}">${c}</option>`).join("");
+  curSel.value = curs.includes(prevCur) ? prevCur : curs[0];
+  $("log-date").value = SEL; $("log-date").min = first; $("log-date").max = last;
+  updateLogPreview();
+
+  // trip to date
+  const lastDone = T<first ? null : (T>last ? last : T);
+  const doneDays = lastDone ? days.filter(d=>d.date<=lastDone) : [];
+  const allowToDate = sum(doneDays,d=>d.total);
+  const actualToDate = sum(logEntries().filter(e=>lastDone && e.date<=lastDone),e=>e.gbp);
+  const totalDaily = sum(days,d=>d.total);
+  const remainingDays = days.filter(d=>d.date>=(lastDone?T:first)).length;
+  const spentBeforeToday = sum(logEntries().filter(e=>e.date<T),e=>e.gbp);
+  const allowBeforeToday = sum(days.filter(d=>d.date<T),d=>d.total);
+  const pace = remainingDays ? (totalDaily - spentBeforeToday)/remainingDays : 0;
+  const planPace = remainingDays ? sum(days.filter(d=>d.date>=T),d=>d.total)/remainingDays : 0;
+  const diff = allowToDate - actualToDate;
+  $("trip-stats").innerHTML = `
+    <div class="fstat"><div class="eyebrow">Trip so far</div>
+      <div class="v ${diff<0?"neg":""}">${doneDays.length? (diff>=0?gbp(diff,0)+"<small> under</small>":gbp(-diff,0)+"<small> over</small>") : "–"}</div>
+      <div class="n">${doneDays.length?`${gbp(actualToDate,0)} spent of ${gbp(allowToDate,0)} over ${doneDays.length} day${doneDays.length>1?"s":""}`:"Starts "+fmtD(first)}</div></div>
+    <div class="fstat"><div class="eyebrow">To stay on budget</div>
+      <div class="v">${gbp(pace,2)}<small> / day</small></div>
+      <div class="n">for the ${remainingDays} days ${T<=first?"of the trip":"left"} · plan averages ${gbp(planPace,2)}</div></div>
+    <div class="fstat"><div class="eyebrow">Daily budget, whole trip</div>
+      <div class="v">${gbp(totalDaily,0)}</div>
+      <div class="n">${gbp(totalDaily/days.length,2)} a day on average · accommodation not included</div></div>`;
+
+  renderDailyChart(M, days, T);
+
+  // per-stop table
+  let t = `<thead><tr><th>Stop</th><th>Dates</th><th class="r">Food</th><th class="r">Transport</th><th class="r">Other</th><th class="r fd">Per day</th><th class="r">Local</th><th class="r">Actual / day</th></tr></thead><tbody>`;
+  M.groups.forEach(g=>{
+    t += `<tr class="grp"><td colspan="8">${esc(g.country)}</td></tr>`;
+    g.stops.forEach(st=>{
+      const sd = days.filter(d=>d.stop===st), pd = sd[0]?.total||0;
+      const logged = sd.filter(d=>d.date<=T && d.date>=first && T>=first);
+      const actAvg = logged.length ? sum(logged,d=>dayActuals(d.date).total)/logged.length : null;
+      t += `<tr${st===s?' class="cur"':""}><td>${esc(short(st.where))}${st.meal?`<span class="meal">${st.meal}</span>`:""}</td><td class="nw">${fmtD(st.start)} – ${fmtD(addD(st.start,st.nights))}</td><td class="r">${gbp(st.foodD,2)}</td><td class="r">${gbp(st.trans/st.nights,2)}</td><td class="r">${gbp(st.act/st.nights,2)}</td><td class="r fd">${gbp(pd,2)}</td><td class="r mono">${localOf(pd,st)}</td><td class="r ${actAvg!=null&&actAvg>pd?"neg":""}">${actAvg==null?"–":gbp(actAvg,2)}</td></tr>`;
+    });
   });
+  t += `<tr class="total"><td>Whole trip</td><td></td><td class="r">${gbp(M.planned.Food)}</td><td class="r">${gbp(M.planned["Local transport"])}</td><td class="r">${gbp(M.planned.Activities)}</td><td class="r">${gbp(totalDaily/days.length,2)} avg</td><td></td><td></td></tr></tbody>`;
+  $("daily-table").innerHTML = t;
+  renderSyncStatus();
+}
+
+function renderDailyChart(M, days, T){
+  const wrap = $("daily-chart-wrap");
+  const W = Math.max(320, wrap.clientWidth||900), H = 240, m = {l:40,r:12,t:24,b:40};
+  const n = days.length, iw=W-m.l-m.r, ih=H-m.t-m.b;
+  const actuals = days.map(d=>dayActuals(d.date).total);
+  const hi = Math.max(...days.map(d=>d.total), ...actuals, 10);
+  const yMax = Math.ceil(hi*1.1/20)*20;
+  const X = i => m.l + i/n*iw, Y = v => m.t + ih - v/yMax*ih, bw = iw/n;
+  let g = `<svg class="fchart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily budget and actual spending across the trip">`;
+  const step = yMax<=60?10:yMax<=150?25:50;
+  for (let v=0; v<=yMax; v+=step) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${m.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">£${v}</text>`;
+  // actual bars
+  days.forEach((d,i)=>{ const a=actuals[i]; if(!a) return; const over=a>d.total+0.005;
+    g += `<rect x="${X(i)+bw*0.15}" y="${Y(a)}" width="${Math.max(1,bw*0.7)}" height="${Y(0)-Y(a)}" rx="1.5" fill="var(${over?"--crit":"--c1"})" fill-opacity="${over?.85:.75}"/>`; });
+  // budget step line
+  let line=""; days.forEach((d,i)=>{ const y=Y(d.total); line += (i?` L${X(i)},${y}`:`M${X(i)},${y}`)+` L${X(i+1)},${y}`; });
+  g += `<path d="${line}" fill="none" stroke="var(--c3)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  // hit areas
+  days.forEach((d,i)=>{ const a=actuals[i];
+    const tip = `<b>${fmtD(d.date,{weekday:"short",day:"numeric",month:"short"})}</b>${esc(short(d.stop.where))} · budget ${gbp(d.total,2)}<br>${a?`Spent ${gbp(a,2)} (${a>d.total?gbp(a-d.total,2)+" over":gbp(d.total-a,2)+" under"})`:"Nothing logged"}`;
+    g += `<rect class="hit" x="${X(i)}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent" data-tip="${esc(tip)}" data-day="${d.date}" style="cursor:pointer"/>`; });
+  // country bands
   let a2=0; M.groups.forEach(gr=>{ const x0=X(a2)+1, x1=X(a2+gr.nights)-1; a2+=gr.nights;
     g += `<line x1="${x0}" x2="${x1}" y1="${m.t+ih+8}" y2="${m.t+ih+8}" stroke="var(--ink-2)" stroke-width="2"/>`;
     const lbl = gr.country.replace("Malaysia & Singapore","MY & SG");
-    if (x1-x0 >= lbl.length*6) g += `<text x="${x0}" y="${m.t+ih+24}" font-size="11" fill="var(--ink-2)">${esc(lbl)}</text>`;
-  });
+    if (x1-x0 >= lbl.length*6) g += `<text x="${x0}" y="${m.t+ih+24}" font-size="11" fill="var(--ink-2)">${esc(lbl)}</text>`; });
   g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--base)" stroke-width="1"/>`;
-  if (inTrip) { const tx = X(dayIdx+0.5); g += `<line x1="${tx}" x2="${tx}" y1="${m.t-6}" y2="${Y(0)}" stroke="var(--crit)" stroke-width="2"/><text x="${tx}" y="${m.t-10}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--crit)">Today</text>`; }
+  const si = days.findIndex(d=>d.date===SEL);
+  if (si>=0) g += `<rect x="${X(si)}" y="${m.t}" width="${bw}" height="${ih}" fill="var(--ink)" fill-opacity=".07" pointer-events="none"/>`;
+  const ti = days.findIndex(d=>d.date===T);
+  if (ti>=0) { const tx=X(ti)+bw/2; g += `<line x1="${tx}" x2="${tx}" y1="${m.t-6}" y2="${Y(0)}" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="3 3" pointer-events="none"/><text x="${tx}" y="${m.t-10}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--crit)">Today</text>`; }
   wrap.innerHTML = g + `</svg>`;
-
-  let ft = `<thead><tr><th>Stop</th><th>Dates</th><th class="r">Food / day</th><th class="r">Local / day</th><th class="r">Days</th><th class="r">Food total</th></tr></thead><tbody>`;
-  M.groups.forEach(gr=>{
-    ft += `<tr class="grp"><td colspan="2">${esc(gr.country)}</td><td class="r"><span class="num">${gbp(gr.food/gr.nights,2)} avg</span></td><td></td><td class="r"><span class="num">${gr.nights}</span></td><td class="r"><span class="num">${gbp(gr.food)}</span></td></tr>`;
-    gr.stops.forEach(s=>{
-      ft += `<tr${inTrip&&s===current?' style="background:var(--food-soft)"':""}><td>${esc(short(s.where))}${s.meal?`<span class="meal">${s.meal}</span>`:""}</td><td class="nw">${fmtD(s.start)} – ${fmtD(addD(s.start,s.nights))}</td><td class="r fd">${gbp(s.foodD)}</td><td class="r mono">${localAll(s)}</td><td class="r">${s.nights}</td><td class="r">${gbp(s.food)}</td></tr>`;
-    });
-  });
-  ft += `<tr class="total"><td>Whole trip</td><td></td><td class="r">${gbp(avg,2)} avg</td><td></td><td class="r">${nights}</td><td class="r">${gbp(foodBudget)}</td></tr></tbody>`;
-  $("food-table").innerHTML = ft;
 }
+$("daily-chart-wrap").addEventListener("click", e=>{ const d=e.target.closest?.("[data-day]")?.dataset.day; if(d && MODEL){ SEL=d; renderDaily(MODEL); $("p-daily").scrollIntoView({behavior:"smooth",block:"start"}); } });
+
+// ---------- logging form
+function selStop(){ if(!MODEL) return null; const d=tripDays(MODEL).find(x=>x.date===$("log-date").value); return d?.stop || null; }
+function updateLogPreview(){
+  const amt=parseFloat($("log-amt").value), c=$("log-cur").value;
+  $("log-gbp").textContent = amt>0 && c!=="GBP" && rate(c) ? `≈ ${gbp(amt/rate(c),2)}` : "";
+}
+["input","change"].forEach(ev=>{ $("log-amt").addEventListener(ev,updateLogPreview); $("log-cur").addEventListener(ev,updateLogPreview); });
+$("log-form").addEventListener("submit", e=>{
+  e.preventDefault();
+  const amount = parseFloat($("log-amt").value), currency=$("log-cur").value, date=$("log-date").value;
+  const cat = (document.querySelector('input[name="log-cat"]:checked')||{}).value || "food";
+  if (!(amount>0)) { $("log-msg").textContent = "Enter an amount above zero."; $("log-amt").focus(); return; }
+  if (!date) { $("log-msg").textContent = "Pick a date."; return; }
+  const r = rate(currency);
+  const entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, cat, amount, currency,
+    gbp: Math.round(amount/r*100)/100, rate:r, note: $("log-note").value.trim().slice(0,120), ts:new Date().toISOString()};
+  queueOp({op:"add", entry});
+  $("log-amt").value=""; $("log-note").value=""; updateLogPreview();
+  $("log-msg").textContent = `Added ${gbp(entry.gbp,2)} ${DCAT[cat].label.toLowerCase()}.`;
+  SEL = date; rerender();
+});
+$("day-entries").addEventListener("click", e=>{
+  const b=e.target.closest("[data-del]"); if(!b) return;
+  if (b.dataset.confirm!=="1") { b.dataset.confirm="1"; b.textContent="Delete?"; b.classList.add("confirm"); setTimeout(()=>{ if(b.isConnected){ b.dataset.confirm=""; b.textContent="×"; b.classList.remove("confirm"); } },3000); return; }
+  queueOp({op:"del", id:b.dataset.del}); rerender();
+});
+
+// ---------- spend log storage (spend-log.json in the GitHub repo)
+const LOG_PATH = "spend-log.json";
+let REMOTE = {entries:[]}, REMOTE_SHA = null, SYNC_STATE = "idle", SYNC_MSG = "";
+const ls = { get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} } };
+let PENDING = ls.get("sabbatical-pending", []);
+const guessRepo = () => { const m = location.hostname.match(/^([^.]+)\.github\.io$/); const p = location.pathname.split("/").filter(Boolean)[0]; return m && p ? `${m[1]}/${p}` : ""; };
+const cfg = () => ({ repo: ls.get("sabbatical-gh-repo", guessRepo()), token: ls.get("sabbatical-gh-token", "") });
+
+function applyOps(entries, ops){
+  let out = entries.slice();
+  ops.forEach(o=>{ if(o.op==="add" && !out.some(e=>e.id===o.entry.id)) out.push(o.entry); if(o.op==="del") out = out.filter(e=>e.id!==o.id); });
+  return out;
+}
+function logEntries(){
+  const pendingIds = new Set(PENDING.filter(o=>o.op==="add").map(o=>o.entry.id));
+  return applyOps(REMOTE.entries||[], PENDING).map(e=>pendingIds.has(e.id)?{...e,pending:true}:e);
+}
+function queueOp(op){ PENDING.push(op); ls.set("sabbatical-pending", PENDING); syncLog(); }
+
+const b64enc = str => { const bytes=new TextEncoder().encode(str); let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin); };
+const b64dec = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g,"")), c=>c.charCodeAt(0)));
+
+async function ghGet(){
+  const {repo, token} = cfg();
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/${LOG_PATH}?t=${Date.now()}`, {headers:{Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json"}, cache:"no-store"});
+  if (res.status===404) return {entries:[], sha:null};
+  if (res.status===401 || res.status===403) throw Object.assign(new Error("GitHub didn't accept the access code. Check it hasn't expired and has Contents: read & write on this repo."),{auth:true});
+  if (!res.ok) throw new Error("GitHub returned "+res.status);
+  const j = await res.json();
+  let data={entries:[]}; try{ data = JSON.parse(b64dec(j.content)); }catch(e){}
+  return {entries:Array.isArray(data.entries)?data.entries:[], sha:j.sha};
+}
+async function ghPut(entries, sha){
+  const {repo, token} = cfg();
+  const body = {message:`Log spend (${entries.length} entries)`, content:b64enc(JSON.stringify({updated:new Date().toISOString(), entries}, null, 1)+"\n")};
+  if (sha) body.sha = sha;
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/${LOG_PATH}`, {method:"PUT", headers:{Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json","Content-Type":"application/json"}, body:JSON.stringify(body)});
+  if (res.status===409 || res.status===422) return null; // someone else wrote first – retry
+  if (res.status===401 || res.status===403 || res.status===404) throw Object.assign(new Error("GitHub refused the save. The access code needs Contents: read & write on "+repo+"."),{auth:true});
+  if (!res.ok) throw new Error("GitHub returned "+res.status);
+  return {sha:(await res.json()).content?.sha};
+}
+
+let syncing = false;
+async function syncLog(){
+  const {repo, token} = cfg();
+  if (!token || !repo) { SYNC_STATE = PENDING.length ? "local" : "readonly"; renderSyncStatus(); return; }
+  if (syncing) return; syncing = true; SYNC_STATE="saving"; renderSyncStatus();
+  try {
+    let done=false;
+    for (let attempt=0; attempt<3 && !done; attempt++){
+      const cur = await ghGet();
+      const ops = PENDING.slice();
+      if (!ops.length) { REMOTE={entries:cur.entries}; REMOTE_SHA=cur.sha; done=true; break; }
+      const next = applyOps(cur.entries, ops);
+      const put = await ghPut(next, cur.sha);
+      if (!put) continue; // someone else saved first: re-read and try again
+      REMOTE={entries:next}; REMOTE_SHA=put.sha;
+      PENDING = PENDING.slice(ops.length); ls.set("sabbatical-pending", PENDING);
+      done = !PENDING.length;
+    }
+    if (!done) throw new Error("Couldn't save after several tries – will retry.");
+    SYNC_STATE="ok"; SYNC_MSG = `Saved to GitHub · ${fmtStamp(Date.now())}`;
+  } catch(e){
+    SYNC_STATE = e.auth ? "auth" : "offline";
+    SYNC_MSG = e.auth ? e.message : `Couldn't reach GitHub – ${PENDING.length} entr${PENDING.length===1?"y":"ies"} saved on this phone and will sync when you're back online.`;
+  } finally { syncing=false; rerender(); }
+}
+async function loadLogPublic(){
+  try {
+    const res = await fetch(LOG_PATH+"?t="+Date.now(), {cache:"no-store"});
+    if (res.ok) { const j = await res.json(); REMOTE = {entries:Array.isArray(j.entries)?j.entries:[]}; }
+  } catch(e){}
+}
+async function refreshLog(){ if (cfg().token) await syncLog(); else { await loadLogPublic(); SYNC_STATE = PENDING.length?"local":"readonly"; rerender(); } }
+
+function renderSyncStatus(){
+  const el = $("sync-status"); if(!el) return;
+  const n = PENDING.length;
+  const map = {
+    readonly:["", "Viewing only. Add your GitHub access code in Logging setup to add spends from this device."],
+    local:["warn", `${n} entr${n===1?"y":"ies"} saved on this device only. Add your GitHub access code in Logging setup to sync ${n===1?"it":"them"}.`],
+    saving:["", "Saving…"], ok:["ok", SYNC_MSG], offline:["warn", SYNC_MSG], auth:["bad", SYNC_MSG], idle:["", ""]
+  };
+  const [cls, msg] = map[SYNC_STATE]||["",""];
+  el.className = "sync-status "+cls; el.textContent = msg;
+}
+
+// setup panel
+(function(){
+  const c = cfg();
+  $("gh-repo").value = c.repo; $("gh-token").value = c.token ? "••••••••" : "";
+  $("gh-save").addEventListener("click", ()=>{
+    const repo = $("gh-repo").value.trim().replace(/^https?:\/\/github\.com\//,"").replace(/\.git$/,"").replace(/\/$/,"");
+    const tok = $("gh-token").value.trim();
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { $("gh-msg").textContent = "Repository should look like owner/name, e.g. mhbae-dev/sabbatical-dashboard."; return; }
+    ls.set("sabbatical-gh-repo", repo);
+    if (tok && !/^•+$/.test(tok)) ls.set("sabbatical-gh-token", tok);
+    $("gh-token").value = cfg().token ? "••••••••" : "";
+    $("gh-msg").textContent = "Saved on this device. Checking GitHub…";
+    syncLog().then(()=>{ $("gh-msg").textContent = SYNC_STATE==="ok" ? "Connected. Spends you add now save to GitHub." : SYNC_MSG; });
+  });
+  $("gh-forget").addEventListener("click", ()=>{ try{ localStorage.removeItem("sabbatical-gh-token"); }catch(e){} $("gh-token").value=""; $("gh-msg").textContent="Access code removed from this device."; SYNC_STATE="readonly"; renderSyncStatus(); });
+})();
+
+// rates editor
 const rg = $("rates-grid");
 rg.innerHTML = Object.keys(DEFAULT_RATES).map(c=>`<label for="rate-${c}">${c}<input id="rate-${c}" type="number" step="any" min="0" value="${RATES[c]}"></label>`).join("") + `<button type="button" class="linkbtn" id="rates-reset">Reset</button>`;
-rg.addEventListener("input",e=>{ const c=e.target.id?.replace("rate-",""); const v=parseFloat(e.target.value); if(DEFAULT_RATES[c]&&v>0){ RATES[c]=v; try{localStorage.setItem("sabbatical-rates",JSON.stringify(RATES));}catch(_){} MODEL&&renderFood(MODEL); } });
-$("rates-reset").addEventListener("click",()=>{ RATES={...DEFAULT_RATES}; try{localStorage.removeItem("sabbatical-rates");}catch(_){} Object.keys(RATES).forEach(c=>$("rate-"+c).value=RATES[c]); MODEL&&renderFood(MODEL); });
-let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(MODEL && !$("p-food").hidden) renderFood(MODEL); },150); });
+rg.addEventListener("input",e=>{ const c=e.target.id?.replace("rate-",""); const v=parseFloat(e.target.value); if(DEFAULT_RATES[c]&&v>0){ RATES[c]=v; ls.set("sabbatical-rates",RATES); MODEL&&renderDaily(MODEL); } });
+$("rates-reset").addEventListener("click",()=>{ RATES={...DEFAULT_RATES}; try{localStorage.removeItem("sabbatical-rates");}catch(_){} Object.keys(RATES).forEach(c=>$("rate-"+c).value=RATES[c]); MODEL&&renderDaily(MODEL); });
+let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(MODEL && !$("p-daily").hidden) renderDailyChart(MODEL, tripDays(MODEL), isoToday()); },150); });
+addEventListener("online", ()=>{ if (PENDING.length) syncLog(); });
 
 // ---------- stays
 const stayChip = s => s.cls==="booked"?'<span class="chip booked">Booked</span>':s.cls==="host"?'<span class="chip host">With friends</span>':`<span class="chip todo">${esc(s.st)}</span>`;
@@ -288,9 +508,10 @@ function renderBudget(M){
     return `<div class="cbar" tabindex="0" data-tip="${esc(`<b>${c}</b>${x.nights} nights · ${gbp(x.total)} budget<br>${gbp(Math.round(x.total/x.nights))} per day${sp?`<br>Committed so far: ${gbp(sp)}`:""}`)}"><div>${esc(c)}</div><div class="t"><div style="width:${x.total/cmax*100}%"></div>${sp?`<div class="spent" style="width:${Math.max(sp/cmax*100,0.8)}%"></div>`:""}</div><div class="val"><b>${gbp(x.total)}</b><small>${x.nights}n · ${gbp(Math.round(x.total/x.nights))}/day</small></div></div>`; }).join("");
 
   const catC = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
-  $("spend-sum").textContent = `${gbp(M.totalCommitted)} across ${M.d.spend.length} payments`;
+  $("spend-sum").textContent = `${gbp(M.totalCommitted)} across ${M.d.spend.length} bookings${M.logCount?` + ${M.logCount} daily spends`:""}`;
   $("spend").innerHTML = `<thead><tr><th>Date</th><th>What</th><th class="r">Amount</th></tr></thead><tbody>` +
     M.d.spend.map(s=>`<tr><td class="nw">${/^\d{4}-\d\d-\d\d$/.test(s.date||"")?fmtD(s.date):esc(s.date)}</td><td><span class="sw" style="background:var(${catC[s.cat]||"--muted"})"></span>${esc(s.desc)}<div class="note">${esc(s.cat)} · ${esc(s.country)}${s.status&&s.status!=="Paid"?" · "+esc(s.status):""}</div></td><td class="r">${gbp(s.amt)}</td></tr>`).join("") +
+    (M.logCount?`<tr><td class="nw">Daily</td><td><span class="sw" style="background:var(--c3)"></span>Day-to-day spending you've logged<div class="note">${M.logCount} entries · see the Daily tab</div></td><td class="r">${gbp(M.logTotal,2)}</td></tr>`:"") +
     `<tr class="total"><td></td><td>Total committed</td><td class="r">${gbp(M.totalCommitted)}</td></tr></tbody>`;
 }
 
@@ -371,12 +592,13 @@ function setSource(state, text){
 }
 function showError(msg){ $("load-error").hidden = false; $("load-error").innerHTML = `<strong>Couldn't read the spreadsheet.</strong> ${esc(msg)}`; }
 
-let lastSig = null, viewingLocal = false;
+let lastSig = null, viewingLocal = false, DATA = null;
+function rerender(){ if (DATA) { try { render(build({data:DATA})); } catch(e){ console.error(e); } } }
 function load(buf, when, label){
   const sig = buf.byteLength + ":" + new Uint8Array(buf).slice(-64).join(",");
   if (sig === lastSig) return false;
   const data = parseWorkbook(buf);
-  lastSig = sig;
+  lastSig = sig; DATA = data;
   $("load-error").hidden = true; $("empty").hidden = true; $("app").hidden = false;
   render(build({data}));
   showTab(currentTab);
@@ -411,16 +633,18 @@ function openLocal(file){
 }
 $("file").addEventListener("change", e=>{ openLocal(e.target.files[0]); e.target.value=""; });
 document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>$("file").click()));
-$("reload").addEventListener("click", ()=>{ viewingLocal=false; lastSig=null; fetchRepoCopy(true); });
+$("reload").addEventListener("click", ()=>{ viewingLocal=false; lastSig=null; fetchRepoCopy(true).then(refreshLog); });
 addEventListener("dragover", e=>{ e.preventDefault(); document.body.classList.add("dragging"); });
 addEventListener("dragleave", e=>{ if (e.target===document.documentElement || !e.relatedTarget) document.body.classList.remove("dragging"); });
 addEventListener("drop", e=>{ e.preventDefault(); document.body.classList.remove("dragging"); const f=[...(e.dataTransfer?.files||[])].find(f=>/\.xlsx$/i.test(f.name)); if(f) openLocal(f); });
-document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) fetchRepoCopy(false); });
-setInterval(()=>fetchRepoCopy(false), POLL_MS);
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) { fetchRepoCopy(false); refreshLog(); } });
+setInterval(()=>{ fetchRepoCopy(false); refreshLog(); }, POLL_MS);
 
 // ---------- boot
 let currentTab = location.hash.replace("#","");
-if (!TABS.includes(currentTab)) { try{ currentTab = localStorage.getItem("sabbatical-tab") || "overview"; }catch(e){ currentTab="overview"; } }
+if (currentTab==="food") currentTab="daily";
+if (!TABS.includes(currentTab)) { try{ currentTab = localStorage.getItem("sabbatical-tab") || "daily"; }catch(e){ currentTab="daily"; } }
+if (currentTab==="food") currentTab="daily";
 showTab(currentTab);
-fetchRepoCopy(true);
+fetchRepoCopy(true).then(refreshLog);
 })();

@@ -11,5 +11,6 @@ if [ ! -d .git ]; then echo "Copied. This folder isn't a git repository yet – 
 git add Sabbatical_Plan_and_Budget.xlsx
 if git diff --cached --quiet; then echo "No changes since the last update."; exit 0; fi
 git commit -m "Update plan & budget ($(date '+%d %b %Y %H:%M'))"
+git pull --rebase --quiet   # picks up spends you logged from your phone first
 git push
 echo "Pushed. The site will show the new figures within a couple of minutes."
