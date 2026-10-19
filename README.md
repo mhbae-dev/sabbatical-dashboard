@@ -8,9 +8,10 @@ A static web page that reads `Sabbatical_Plan_and_Budget.xlsx` and shows it as a
 |---|---|
 | `index.html`, `styles.css`, `app.js` | The dashboard |
 | `vendor/xlsx.full.min.js` | SheetJS 0.20.3, which reads .xlsx files in the browser (Apache 2.0) |
-| `Sabbatical_Plan_and_Budget.xlsx` | A copy of your spreadsheet that the page reads |
-| `update.sh` | Copies the latest spreadsheet in and pushes it to GitHub |
-| `spend-log.json` | Created automatically the first time you log a spend from the Daily tab |
+| `Sabbatical_Plan_and_Budget.xlsx` | The spreadsheet itself. The copy in this repo is the master |
+| `spend-log.json` | Spends logged from the Daily tab |
+| `.github/workflows/sync-tracker.yml`, `scripts/sync_tracker.py` | Copies logged spends into the spreadsheet's Tracker sheet (see below) |
+| `update.sh` | Pulls the latest spreadsheet and spend log to your Mac as a backup |
 
 ## Put it on GitHub Pages
 
@@ -28,15 +29,31 @@ A static web page that reads `Sabbatical_Plan_and_Budget.xlsx` and shows it as a
 
 ## Keeping it up to date
 
-Edit the spreadsheet as usual, save it, then run `./update.sh` in this folder (or copy the spreadsheet in and commit it with GitHub Desktop). The open page checks for a new copy every 5 minutes, and whenever you switch back to the tab. The **Reload** button checks straight away.
+The spreadsheet in this repository is the single source of truth. Change it here: ask Claude in a cloud session on this repo, or download it from GitHub, edit it and upload it again. Once a change is committed, GitHub Pages redeploys in a minute or two. The open page checks for a new copy every 5 minutes, and whenever you switch back to the tab. The **Reload** button checks straight away.
 
-**Open a file…** (or dragging an .xlsx onto the page) shows a spreadsheet from your computer without uploading it. That's handy for checking changes before you push them.
+`./update.sh` only goes one way, from GitHub to your Mac. It pulls the latest commits and copies `Sabbatical_Plan_and_Budget.xlsx` and `spend-log.json` into your Sabbatical folder as a backup. It never pushes. If the spreadsheet in your Sabbatical folder had been edited since the last pull, it's saved to `Backups/` first, because those edits aren't on GitHub.
+
+**Open a file…** (or dragging an .xlsx onto the page) shows a spreadsheet from your computer without uploading it. That's handy for checking changes before you commit them.
 
 ## Logging daily spends (Daily tab)
 
 The Daily tab shows today's budget: food + local transport + activities & other, taken from the Itinerary for the stop you're at. It also shows how much of it is left. Add what you spend with **Log a spend**. Amounts in local currency are converted to £ with the rates under *Exchange rates*.
 
-Spends are saved to `spend-log.json` in this repository, separate from the spreadsheet. They count towards *Committed* on the Overview and Budget tabs.
+Spends are saved to `spend-log.json` in this repository. They count towards *Committed* on the Overview and Budget tabs.
+
+### Logged spends in the Tracker sheet
+
+Whenever `spend-log.json` changes, the **Sync spend log to Tracker** GitHub Action (`.github/workflows/sync-tracker.yml`) updates the spreadsheet's Tracker sheet to match the log and commits it. It runs `scripts/sync_tracker.py`, then recalculates the formulas in LibreOffice, because the page reads the calculated values. A run takes 1–2 minutes.
+
+- **New entry**: a row is added at the bottom with the date, the country from the Itinerary for that date ("Pre-trip" before the trip), the category (Food, Local transport or Activities), the note, the £ amount and status Paid.
+- **Edited entry**: its row is rewritten in place. The log is the master copy for these rows, so editing them in the spreadsheet won't stick.
+- **Deleted entry**: its row is removed.
+
+Each synced row has the log entry's id in the hidden column J (**Log ID**), which is how rows are matched. Rows without a Log ID, such as bookings you type in yourself, are never touched. Keep column J if you edit the Tracker.
+
+The page counts each logged spend once. It counts it from the log, which is the newer copy, and skips the matching Tracker row.
+
+You can also run the sync by hand from **Actions → Sync spend log to Tracker → Run workflow**. It needs **Settings → Actions → General → Workflow permissions** set to *Read and write permissions*.
 
 To log from a device, set it up once:
 
@@ -48,7 +65,7 @@ To log from a device, set it up once:
 
 The token is stored only in that phone's browser. If you're offline, spends are kept on the phone and sync when you're back online. To delete an entry, tap **×** next to it and then confirm.
 
-Because the phone writes to the repo, run `git pull` before working in this folder on your Mac. `update.sh` already does this.
+Because the phone and the Action both write to the repo, run `./update.sh` (or `git pull`) before working in this folder on your Mac.
 
 ## Privacy
 
@@ -59,4 +76,4 @@ On a **public** repository, anyone with the link can see the page *and* download
 
 ## What the page expects from the spreadsheet
 
-It reads the tab names and columns as they are now: Overview (budget in B3), Itinerary, Hotels, Flights, Admin & checklist and Tracker. You can add or remove stops, flights or spending rows freely, as long as each table still ends with its **Total** row (Tracker has no Total row). Renaming a tab or moving columns will need a matching change in `app.js` (`parseWorkbook`).
+It reads the tab names and columns as they are now: Overview (budget in B3), Itinerary, Hotels, Flights, Admin & checklist and Tracker. You can add or remove stops, flights or spending rows freely, as long as each table still ends with its **Total** row (Tracker has no Total row; its column J holds the Log ID). Renaming a tab or moving columns will need a matching change in `app.js` (`parseWorkbook`).

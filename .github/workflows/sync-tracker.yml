@@ -1,0 +1,74 @@
+name: Sync spend log to Tracker
+
+# Runs whenever spend-log.json changes on main (e.g. a spend logged from the
+# Daily tab) and keeps the Tracker sheet of the spreadsheet in step with it.
+on:
+  push:
+    branches: [main]
+    paths: [spend-log.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # commit the updated spreadsheet
+  pages: write      # ask GitHub Pages to redeploy
+
+# One run at a time; a run that's queued behind another still picks up the latest log
+concurrency:
+  group: sync-tracker
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main   # latest main, not the commit that triggered the run
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Update the Tracker sheet
+        id: sync
+        run: |
+          pip install --quiet openpyxl==3.1.5
+          python scripts/sync_tracker.py
+
+      - name: Install LibreOffice
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libreoffice-calc-nogui
+
+      # openpyxl saves formulas without their results, and the dashboard reads the
+      # results, so open and re-save the file in LibreOffice to recalculate them.
+      - name: Recalculate formulas
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          mkdir -p /tmp/lo/user /tmp/recalc
+          cat > /tmp/lo/user/registrymodifications.xcu <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <oor:items xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <item oor:path="/org.openoffice.Office.Calc/Formula/Load"><prop oor:name="OOXMLRecalcMode" oor:op="fuse"><value>0</value></prop></item>
+          </oor:items>
+          EOF
+          soffice -env:UserInstallation=file:///tmp/lo --headless --norestore \
+            --convert-to xlsx:"Calc MS Excel 2007 XML" --outdir /tmp/recalc Sabbatical_Plan_and_Budget.xlsx
+          mv /tmp/recalc/Sabbatical_Plan_and_Budget.xlsx Sabbatical_Plan_and_Budget.xlsx
+
+      - name: Commit the spreadsheet
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Sabbatical_Plan_and_Budget.xlsx
+          git commit -m "Sync Tracker with spend log (${{ steps.sync.outputs.summary }})"
+          for i in 1 2 3; do
+            git pull --rebase --quiet origin main && git push origin HEAD:main && break
+            sleep 5
+          done
+          # Pushes made with the workflow token may not start a Pages build on their own
+          gh api -X POST "repos/${{ github.repository }}/pages/builds" >/dev/null || true

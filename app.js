@@ -51,13 +51,16 @@ function build(doc){
     "Local transport": sum(stops,s=>s.trans), "Activities": sum(stops,s=>s.act), "Insurance & admin": sum(d.admin,a=>a.amt)
   };
   const LOG = logEntries();
-  const committed={}; CATS.forEach(c=>committed[c.k]=sum(d.spend.filter(s=>s.cat===c.k),s=>s.amt) + sum(LOG.filter(e=>DCAT[e.cat]?.budgetCat===c.k),e=>e.gbp));
-  const other = sum(d.spend.filter(s=>!CATS.some(c=>c.k===s.cat)),s=>s.amt);
+  // Tracker rows copied from the log (Log ID in column J) are counted once, from the log, which is always the newer copy
+  const logIds = new Set(LOG.map(e=>e.id));
+  const spend = d.spend.filter(s=>!(s.logId && logIds.has(s.logId)));
+  const committed={}; CATS.forEach(c=>committed[c.k]=sum(spend.filter(s=>s.cat===c.k),s=>s.amt) + sum(LOG.filter(e=>DCAT[e.cat]?.budgetCat===c.k),e=>e.gbp));
+  const other = sum(spend.filter(s=>!CATS.some(c=>c.k===s.cat)),s=>s.amt);
   const totalPlan = sum(CATS,c=>planned[c.k]);
   const logTotal = sum(LOG,e=>e.gbp);
-  const totalCommitted = sum(d.spend,s=>s.amt) + logTotal;
+  const totalCommitted = sum(spend,s=>s.amt) + logTotal;
   const nights = sum(stops,s=>s.nights);
-  return {doc, d, budget:d.budget, stops, flights, groups, planned, committed, other, totalPlan, totalCommitted,
+  return {doc, d:{...d, spend}, budget:d.budget, stops, flights, groups, planned, committed, other, totalPlan, totalCommitted,
     buffer:d.budget-totalPlan, nights, logTotal, logCount:LOG.length, ground:sum(stops,s=>s.total)};
 }
 
@@ -619,7 +622,7 @@ function parseWorkbook(buf){
   data.spend = [];
   for (let r=5; r<=maxRow("Tracker"); r++) {
     if (raw("Tracker","E"+r)==null || raw("Tracker","E"+r)==="") continue;
-    data.spend.push({date:dateVal("Tracker","A"+r), country:val("Tracker","B"+r), cat:val("Tracker","C"+r), desc:val("Tracker","D"+r), amt:num("Tracker","E"+r), status:val("Tracker","F"+r)});
+    data.spend.push({date:dateVal("Tracker","A"+r), country:val("Tracker","B"+r), cat:val("Tracker","C"+r), desc:val("Tracker","D"+r), amt:num("Tracker","E"+r), status:val("Tracker","F"+r), logId:val("Tracker","J"+r)});
   }
   if (!data.stops.length) throw new Error("No stops found on the Itinerary tab.");
   return data;
