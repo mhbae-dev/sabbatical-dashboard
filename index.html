@@ -97,11 +97,11 @@
           <input id="log-note" type="text" maxlength="120" placeholder="What was it? (optional)">
           <div class="log-actions">
             <label class="date-lab" for="log-date">Date <input id="log-date" type="date"></label>
-            <button type="submit" class="btn">Add</button>
+            <span class="btns2"><button type="button" class="linkbtn" id="log-cancel" hidden>Cancel</button><button type="submit" class="btn" id="log-submit">Add</button></span>
           </div>
           <div class="log-msg" id="log-msg" aria-live="polite"></div>
         </form>
-        <h3 class="entries-h">Spent this day</h3>
+        <h3 class="entries-h">Spent this day <span class="hint">· tap one to change it</span></h3>
         <ul class="entries" id="day-entries"></ul>
         <div class="sync-status" id="sync-status" aria-live="polite"></div>
       </section>

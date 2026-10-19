@@ -190,16 +190,19 @@ function renderDaily(M){
 
   // entries for the day
   $("day-entries").innerHTML = act.entries.length ? act.entries.sort((a,b)=>(a.ts||"").localeCompare(b.ts||"")).map(e=>`
-    <li><span class="sw" style="background:var(${DCAT[e.cat]?.c||"--muted"})"></span><span class="what">${esc(e.note||DCAT[e.cat]?.label||"")}<small>${DCAT[e.cat]?.label||""}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.pending?" · waiting to sync":""}</small></span><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
+    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="sw" style="background:var(${DCAT[e.cat]?.c||"--muted"})"></span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||DCAT[e.cat]?.label||"entry")}">${esc(e.note||DCAT[e.cat]?.label||"")}<small>${DCAT[e.cat]?.label||""}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
     : `<li class="note">Nothing logged for this day yet.</li>`;
 
-  // form defaults
+  // form defaults (left alone while an entry is being edited)
+  if (EDITING) { renderSyncStatusLater(); } else {
   const curSel = $("log-cur"); const curs = [...new Set([...(s.cur||[]), "GBP"])];
   const prevCur = curSel.value;
   curSel.innerHTML = curs.map(c=>`<option value="${c}">${c}</option>`).join("");
   curSel.value = curs.includes(prevCur) ? prevCur : curs[0];
-  $("log-date").value = SEL; $("log-date").min = first; $("log-date").max = last;
+  $("log-date").value = SEL;
   updateLogPreview();
+  }
+  $("log-date").min = first; $("log-date").max = last;
 
   // trip to date
   const lastDone = T<first ? null : (T>last ? last : T);
@@ -290,17 +293,49 @@ $("log-form").addEventListener("submit", e=>{
   const cat = (document.querySelector('input[name="log-cat"]:checked')||{}).value || "food";
   if (!(amount>0)) { $("log-msg").textContent = "Enter an amount above zero."; $("log-amt").focus(); return; }
   if (!date) { $("log-msg").textContent = "Pick a date."; return; }
-  const r = rate(currency);
-  const entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, cat, amount, currency,
-    gbp: Math.round(amount/r*100)/100, rate:r, note: $("log-note").value.trim().slice(0,120), ts:new Date().toISOString()};
-  queueOp({op:"add", entry});
+  const note = $("log-note").value.trim().slice(0,120);
+  // keep the original rate when only the note/category/date changed, so the £ value doesn't drift
+  const sameMoney = EDITING && EDITING.amount===amount && EDITING.currency===currency;
+  const r = sameMoney ? EDITING.rate : rate(currency);
+  const gbpVal = sameMoney ? EDITING.gbp : Math.round(amount/r*100)/100;
+  if (EDITING) {
+    const entry = {...EDITING, date, cat, amount, currency, gbp:gbpVal, rate:r, note, edited:new Date().toISOString()};
+    delete entry.pending;
+    queueOp({op:"edit", entry});
+    $("log-msg").textContent = `Updated to ${gbp(entry.gbp,2)} ${DCAT[cat].label.toLowerCase()}.`;
+    stopEditing();
+  } else {
+    const entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, cat, amount, currency,
+      gbp:gbpVal, rate:r, note, ts:new Date().toISOString()};
+    queueOp({op:"add", entry});
+    $("log-msg").textContent = `Added ${gbp(entry.gbp,2)} ${DCAT[cat].label.toLowerCase()}.`;
+  }
   $("log-amt").value=""; $("log-note").value=""; updateLogPreview();
-  $("log-msg").textContent = `Added ${gbp(entry.gbp,2)} ${DCAT[cat].label.toLowerCase()}.`;
   SEL = date; rerender();
 });
+let EDITING = null;
+function renderSyncStatusLater(){ setTimeout(renderSyncStatus,0); }
+function startEditing(id){
+  const e = logEntries().find(x=>x.id===id); if(!e) return;
+  EDITING = {...e}; delete EDITING.pending;
+  const curSel=$("log-cur");
+  if (![...curSel.options].some(o=>o.value===e.currency)) curSel.insertAdjacentHTML("beforeend",`<option value="${esc(e.currency)}">${esc(e.currency)}</option>`);
+  curSel.value = e.currency; $("log-amt").value = e.amount; $("log-note").value = e.note||""; $("log-date").value = e.date;
+  const r=$("cat-"+e.cat); if(r) r.checked = true;
+  $("log-submit").textContent = "Save changes"; $("log-cancel").hidden = false;
+  $("h-log").textContent = "Edit spend"; $("log-msg").textContent = "";
+  updateLogPreview(); rerender();
+  $("log-form").scrollIntoView({behavior:"smooth",block:"center"}); $("log-amt").focus({preventScroll:true});
+}
+function stopEditing(){
+  EDITING = null; $("log-submit").textContent = "Add"; $("log-cancel").hidden = true; $("h-log").textContent = "Log a spend";
+}
+$("log-cancel").addEventListener("click", ()=>{ stopEditing(); $("log-amt").value=""; $("log-note").value=""; $("log-msg").textContent=""; rerender(); });
 $("day-entries").addEventListener("click", e=>{
+  const ed=e.target.closest("[data-edit]"); if(ed){ startEditing(ed.dataset.edit); return; }
   const b=e.target.closest("[data-del]"); if(!b) return;
   if (b.dataset.confirm!=="1") { b.dataset.confirm="1"; b.textContent="Delete?"; b.classList.add("confirm"); setTimeout(()=>{ if(b.isConnected){ b.dataset.confirm=""; b.textContent="×"; b.classList.remove("confirm"); } },3000); return; }
+  if (EDITING && EDITING.id===b.dataset.del) { stopEditing(); $("log-amt").value=""; $("log-note").value=""; }
   queueOp({op:"del", id:b.dataset.del}); rerender();
 });
 
@@ -314,11 +349,15 @@ const cfg = () => ({ repo: ls.get("sabbatical-gh-repo", guessRepo()), token: ls.
 
 function applyOps(entries, ops){
   let out = entries.slice();
-  ops.forEach(o=>{ if(o.op==="add" && !out.some(e=>e.id===o.entry.id)) out.push(o.entry); if(o.op==="del") out = out.filter(e=>e.id!==o.id); });
+  ops.forEach(o=>{
+    if(o.op==="add" && !out.some(e=>e.id===o.entry.id)) out.push(o.entry);
+    if(o.op==="edit") out = out.map(e=>e.id===o.entry.id ? o.entry : e);   // an entry deleted elsewhere stays deleted
+    if(o.op==="del") out = out.filter(e=>e.id!==o.id);
+  });
   return out;
 }
 function logEntries(){
-  const pendingIds = new Set(PENDING.filter(o=>o.op==="add").map(o=>o.entry.id));
+  const pendingIds = new Set(PENDING.filter(o=>o.op==="add"||o.op==="edit").map(o=>o.entry.id));
   return applyOps(REMOTE.entries||[], PENDING).map(e=>pendingIds.has(e.id)?{...e,pending:true}:e);
 }
 function queueOp(op){ PENDING.push(op); ls.set("sabbatical-pending", PENDING); syncLog(); }
