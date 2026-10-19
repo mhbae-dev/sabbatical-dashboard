@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Sabbatical 2026–27</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f1720'/%3E%3Cpath d='M7 19l18-7-4 9-5-2-2 4-1-5z' fill='%23f5c451'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="board">
+    <div class="board-top">
+      <div>
+        <div class="eyebrow" style="color:var(--board-dim)">Sabbatical plan &amp; budget</div>
+        <h1>Sabbatical 2026–27</h1>
+        <div class="dates" id="subtitle"></div>
+      </div>
+      <div class="countdown">
+        <div class="big" id="cd-num">–</div>
+        <div class="lbl" id="cd-lbl"></div>
+      </div>
+    </div>
+    <div class="route" id="route" aria-label="Route"></div>
+    <div class="source">
+      <div class="sync" id="sync"><i></i><span>Loading your spreadsheet…</span></div>
+      <div class="btns">
+        <button type="button" class="bbtn" id="reload">Reload</button>
+        <button type="button" class="bbtn" data-open>Open a file…</button>
+        <input type="file" id="file" accept=".xlsx" hidden>
+      </div>
+    </div>
+  </header>
+
+  <div class="err" id="load-error" role="alert" hidden></div>
+
+  <section class="card empty" id="empty" hidden>
+    <h2>Add your spreadsheet</h2>
+    <p>This page reads <code>Sabbatical_Plan_and_Budget.xlsx</code> from the same folder as the page. Put the file in the repository (or run <code>update.sh</code>), or open it from your computer to view it here without uploading it.</p>
+    <button type="button" class="btn" data-open>Open Sabbatical_Plan_and_Budget.xlsx</button>
+  </section>
+
+  <div id="app" class="panel" hidden>
+  <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+    <button class="tab" role="tab" id="tab-overview" aria-controls="p-overview" data-tab="overview">Overview</button>
+    <button class="tab" role="tab" id="tab-food" aria-controls="p-food" data-tab="food">Food</button>
+    <button class="tab" role="tab" id="tab-stays" aria-controls="p-stays" data-tab="stays">Stays</button>
+    <button class="tab" role="tab" id="tab-flights" aria-controls="p-flights" data-tab="flights">Flights</button>
+    <button class="tab" role="tab" id="tab-budget" aria-controls="p-budget" data-tab="budget">Budget</button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <section class="panel" role="tabpanel" id="p-overview" aria-labelledby="tab-overview">
+    <div id="verdict"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <section class="card" aria-labelledby="h-next">
+        <div class="card-head"><h2 id="h-next">Next up</h2><span class="sub">Open checklist items &amp; flights to book</span></div>
+        <ul class="todo-list" id="todo"></ul>
+      </section>
+      <section class="card" aria-labelledby="h-prog">
+        <div class="card-head"><h2 id="h-prog">Booking progress</h2></div>
+        <div class="prog" id="prog"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- FOOD -->
+  <section class="panel" role="tabpanel" id="p-food" aria-labelledby="tab-food" hidden>
+    <div class="food-top" id="food-top"></div>
+    <section class="card" aria-labelledby="h-food">
+      <div class="card-head"><h2 id="h-food">Daily food allowance, stop by stop</h2><span class="sub">Hover a step for local currency</span></div>
+      <div id="food-chart-wrap" style="min-width:0"></div>
+    </section>
+    <section class="card">
+      <div class="tbl-wrap"><table id="food-table"></table></div>
+      <details class="rates" id="rates" style="margin-top:14px">
+        <summary>Exchange rates used for local amounts</summary>
+        <p style="margin:8px 0 0">Approximate mid-market rates, £1 = … Change them here if they move; saved in this browser only.</p>
+        <div class="rates-grid" id="rates-grid"></div>
+      </details>
+    </section>
+  </section>
+
+  <!-- STAYS -->
+  <section class="panel" role="tabpanel" id="p-stays" aria-labelledby="tab-stays" hidden>
+    <section class="card" aria-labelledby="h-journey">
+      <div class="card-head"><h2 id="h-journey">The journey</h2><span class="sub">Each block is one stay, sized by nights</span></div>
+      <div class="tl-scroll"><div class="tl" id="tl"></div></div>
+      <div class="tl-key">
+        <span><i style="background:var(--accent)"></i>Booked</span>
+        <span><i style="background:var(--accent-soft);border:1.5px solid var(--accent)"></i>Staying with friends</span>
+        <span><i style="background:repeating-linear-gradient(45deg,var(--line) 0 3px,var(--surface) 3px 6px);border:1.5px solid var(--base)"></i>Still to book</span>
+        <span><i style="width:2px;background:var(--crit)"></i>Key date</span>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="h-hotels">
+      <div class="card-head"><h2 id="h-hotels">Hotels &amp; stays</h2><span class="sub" id="hotel-sum"></span></div>
+      <div class="tbl-wrap"><table id="hotels"></table></div>
+    </section>
+  </section>
+
+  <!-- FLIGHTS -->
+  <section class="panel" role="tabpanel" id="p-flights" aria-labelledby="tab-flights" hidden>
+    <div class="kpis" id="flight-kpis"></div>
+    <section class="card" aria-labelledby="h-flights">
+      <div class="card-head"><h2 id="h-flights">Every flight</h2><span class="sub">Grouped by booking</span></div>
+      <div id="flights"></div>
+      <p class="note" style="margin:14px 0 0">Hakodate → Tokyo on 16 Jan is by shinkansen and sits in the Tokyo stop's transport budget.</p>
+    </section>
+  </section>
+
+  <!-- BUDGET -->
+  <section class="panel" role="tabpanel" id="p-budget" aria-labelledby="tab-budget" hidden>
+    <section class="card" aria-labelledby="h-budget">
+      <div class="card-head"><h2 id="h-budget">Where the budget goes</h2><span class="sub">Hover a segment for detail</span></div>
+      <div class="bars" id="bars" style="margin-top:28px"></div>
+      <div class="legend" id="legend"></div>
+      <div class="tbl-wrap" style="margin-top:20px"><table id="cat-table"></table></div>
+    </section>
+    <div class="grid2">
+      <section class="card" aria-labelledby="h-country">
+        <div class="card-head"><h2 id="h-country">Ground budget by country</h2><span class="sub">Excludes flights &amp; insurance</span></div>
+        <div class="cbars" id="cbars"></div>
+        <p class="note" style="margin:14px 0 0">Korea and Japan are visited twice; both visits are combined. Dark fill shows what's already committed.</p>
+      </section>
+      <section class="card" aria-labelledby="h-spend">
+        <div class="card-head"><h2 id="h-spend">Spending so far</h2><span class="sub" id="spend-sum"></span></div>
+        <div class="tbl-wrap"><table id="spend"></table></div>
+      </section>
+    </div>
+  </section>
+
+  </div>
+  <p class="foot" id="foot">Everything is calculated in your browser from Sabbatical_Plan_and_Budget.xlsx. The page checks for a new copy every 5 minutes. All figures in £.</p>
+</div>
+<div id="tip" hidden></div>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
