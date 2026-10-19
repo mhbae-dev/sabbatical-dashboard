@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-19T22:56:34.196Z",
+ "updated": "2026-10-19T22:56:51.980Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -11,6 +11,17 @@
    "rate": 1,
    "note": "Kimbap",
    "ts": "2026-10-19T22:56:32.901Z"
+  },
+  {
+   "id": "mvfutaqk8eyk",
+   "date": "2026-10-20",
+   "cat": "food",
+   "amount": 2.55,
+   "currency": "GBP",
+   "gbp": 2.55,
+   "rate": 1,
+   "note": "Eggs and Sparkling water",
+   "ts": "2026-10-19T22:56:50.588Z"
   }
  ]
 }
