@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-19T22:56:51.980Z",
+ "updated": "2026-10-20T00:09:45.939Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -22,6 +22,39 @@
    "rate": 1,
    "note": "Eggs and Sparkling water",
    "ts": "2026-10-19T22:56:50.588Z"
+  },
+  {
+   "id": "mvfx8jx3909u",
+   "date": "2026-10-19",
+   "cat": "transport",
+   "amount": 2.95,
+   "currency": "GBP",
+   "gbp": 2.95,
+   "rate": 1,
+   "note": "TMoney",
+   "ts": "2026-10-20T00:04:41.559Z"
+  },
+  {
+   "id": "mvfx90yw8xl4",
+   "date": "2026-10-19",
+   "cat": "food",
+   "amount": 3.05,
+   "currency": "GBP",
+   "gbp": 3.05,
+   "rate": 1,
+   "note": "Coffee",
+   "ts": "2026-10-20T00:05:03.656Z"
+  },
+  {
+   "id": "mvfx9bgghgpi",
+   "date": "2026-10-19",
+   "cat": "food",
+   "amount": 14.91,
+   "currency": "GBP",
+   "gbp": 14.91,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-10-20T00:05:17.248Z"
   }
  ]
 }
