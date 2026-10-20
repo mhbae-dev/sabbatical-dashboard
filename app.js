@@ -15,7 +15,7 @@ const now = new Date(); const today = new Date(now.getFullYear(),now.getMonth(),
 const $ = id => document.getElementById(id);
 
 // ---------- tabs
-const TABS = ["daily","overview","stays","flights","budget"];
+const TABS = ["daily","spending","overview","stays","flights","budget"];
 function showTab(t, focus){
   if (t==="food") t = "daily";
   if(!TABS.includes(t)) t = "daily";
@@ -23,6 +23,7 @@ function showTab(t, focus){
   TABS.forEach(x=>$("p-"+x).hidden = x!==t);
   currentTab = t; try{ localStorage.setItem("sabbatical-tab",t); }catch(e){} try{ history.replaceState(null,"","#"+t); }catch(e){}
   if (t==="daily" && MODEL) renderDaily(MODEL);
+  if (t==="spending" && MODEL) renderSpending(MODEL);
 }
 document.querySelector(".tabs").addEventListener("click",e=>{ const b=e.target.closest(".tab"); if(b) showTab(b.dataset.tab); });
 document.querySelector(".tabs").addEventListener("keydown",e=>{
@@ -70,6 +71,7 @@ function render(M){
   MODEL = M;
   renderHeader(M); renderOverview(M); renderStays(M); renderFlights(M); renderBudget(M);
   if (!$("p-daily").hidden) renderDaily(M);
+  if (!$("p-spending").hidden) renderSpending(M);
 }
 
 function renderHeader(M){
@@ -142,6 +144,38 @@ const DCATS = [
 ];
 const DCAT = Object.fromEntries(DCATS.map(c=>[c.k,c]));
 
+// Spending kinds: finer than the three budget lines (each one rolls up into food, transport or other)
+const KINDS = [
+  {k:"meals",      e:"🍜", chip:"Meals",      label:"Meals",               cat:"food",      c:"--k1"},
+  {k:"coffee",     e:"☕", chip:"Coffee",     label:"Coffee & cafés",      cat:"food",      c:"--k2"},
+  {k:"drinks",     e:"🍺", chip:"Drinks",     label:"Drinks & nights out", cat:"food",      c:"--k3"},
+  {k:"groceries",  e:"🛒", chip:"Groceries",  label:"Groceries & snacks",  cat:"food",      c:"--k4"},
+  {k:"transport",  e:"🚇", chip:"Transport",  label:"Transport",           cat:"transport", c:"--k5"},
+  {k:"activities", e:"🎟️", chip:"Activities", label:"Activities",          cat:"other",     c:"--k6"},
+  {k:"shopping",   e:"🛍️", chip:"Shopping",   label:"Shopping",            cat:"other",     c:"--k7"},
+  {k:"essentials", e:"🧴", chip:"Essentials", label:"Essentials",          cat:"other",     c:"--k8"},
+  {k:"misc",       e:"✨", chip:"Other",      label:"Other",               cat:"other",     c:"--k9"}
+];
+const KIND = Object.fromEntries(KINDS.map(x=>[x.k,x]));
+// Older entries have no kind yet: guess one from the note, within the budget line they were logged under
+const KIND_WORDS = [
+  ["coffee", /coffee|caf[eé]|latte|americano|espresso|cappuccino|flat white|mocha|starbucks|커피|카페/i],
+  ["drinks", /beer|soju|makgeolli|sake|wine|cocktail|highball|\bbar\b|\bpub\b|izakaya|whisk|맥주|소주/i],
+  ["groceries", /grocer|\bmart\b|supermarket|7-?eleven|gs25|\bcu\b|lawson|family ?mart|konbini|convenience|snack|water|\beggs?\b|fruit|bread|milk|juice/i],
+  ["essentials", /\be?sim\b|laundry|pharmac|toiletr|olive young|haircut|medicine|atm|\bfee\b|sunscreen|shampoo/i],
+  ["shopping", /shop|clothes|souvenir|gift|uniqlo|daiso|book|muji/i],
+  ["activities", /ticket|museum|tour|entry|admission|temple|palace|onsen|spa|class|show|cinema|gym|massage|gallery|park/i],
+  ["transport", /taxi|uber|grab|\bbus\b|metro|subway|train|ktx|shinkansen|t-?money|suica|ferry|kakao ?t/i]
+];
+function kindOf(e){
+  if (e.kind && KIND[e.kind]) return e.kind;
+  if (e.cat==="transport") return "transport";
+  const n = e.note || "";
+  for (const [k,re] of KIND_WORDS) if (KIND[k].cat===e.cat && re.test(n)) return k;
+  return e.cat==="food" ? "meals" : "misc";
+}
+$("kind-ctl").insertAdjacentHTML("beforeend", KINDS.map((x,i)=>`<input type="radio" name="log-kind" id="kind-${x.k}" value="${x.k}"${i?"":" checked"}><label for="kind-${x.k}"><span class="em" aria-hidden="true">${x.e}</span>${x.chip}</label>`).join(""));
+
 function tripDays(M){
   const days=[]; M.stops.forEach(s=>{ for(let i=0;i<s.nights;i++){
     const allow = {food:s.foodD, transport:s.trans/s.nights, other:s.act/s.nights};
@@ -193,7 +227,7 @@ function renderDaily(M){
 
   // entries for the day
   $("day-entries").innerHTML = act.entries.length ? act.entries.sort((a,b)=>(a.ts||"").localeCompare(b.ts||"")).map(e=>`
-    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="sw" style="background:var(${DCAT[e.cat]?.c||"--muted"})"></span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||DCAT[e.cat]?.label||"entry")}">${esc(e.note||DCAT[e.cat]?.label||"")}<small>${DCAT[e.cat]?.label||""}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
+    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="kem" aria-hidden="true">${KIND[kindOf(e)].e}</span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||KIND[kindOf(e)].label)}">${esc(e.note||KIND[kindOf(e)].label)}<small>${KIND[kindOf(e)].label}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
     : `<li class="note">Nothing logged for this day yet.</li>`;
 
   // form defaults (left alone while an entry is being edited)
@@ -293,7 +327,8 @@ function updateLogPreview(){
 $("log-form").addEventListener("submit", e=>{
   e.preventDefault();
   const amount = parseFloat($("log-amt").value), currency=$("log-cur").value, date=$("log-date").value;
-  const cat = (document.querySelector('input[name="log-cat"]:checked')||{}).value || "food";
+  const kind = (document.querySelector('input[name="log-kind"]:checked')||{}).value || "meals";
+  const cat = KIND[kind].cat;
   if (!(amount>0)) { $("log-msg").textContent = "Enter an amount above zero."; $("log-amt").focus(); return; }
   if (!date) { $("log-msg").textContent = "Pick a date."; return; }
   const note = $("log-note").value.trim().slice(0,120);
@@ -302,16 +337,16 @@ $("log-form").addEventListener("submit", e=>{
   const r = sameMoney ? EDITING.rate : rate(currency);
   const gbpVal = sameMoney ? EDITING.gbp : Math.round(amount/r*100)/100;
   if (EDITING) {
-    const entry = {...EDITING, date, cat, amount, currency, gbp:gbpVal, rate:r, note, edited:new Date().toISOString()};
+    const entry = {...EDITING, date, cat, kind, amount, currency, gbp:gbpVal, rate:r, note, edited:new Date().toISOString()};
     delete entry.pending;
     queueOp({op:"edit", entry});
-    $("log-msg").textContent = `Updated to ${gbp(entry.gbp,2)} ${DCAT[cat].label.toLowerCase()}.`;
+    $("log-msg").textContent = `Updated to ${gbp(entry.gbp,2)} · ${KIND[kind].e} ${KIND[kind].chip.toLowerCase()}.`;
     stopEditing();
   } else {
-    const entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, cat, amount, currency,
+    const entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, cat, kind, amount, currency,
       gbp:gbpVal, rate:r, note, ts:new Date().toISOString()};
     queueOp({op:"add", entry});
-    $("log-msg").textContent = `Added ${gbp(entry.gbp,2)} ${DCAT[cat].label.toLowerCase()}.`;
+    $("log-msg").textContent = `Added ${gbp(entry.gbp,2)} · ${KIND[kind].e} ${KIND[kind].chip.toLowerCase()}.`;
   }
   $("log-amt").value=""; $("log-note").value=""; updateLogPreview();
   SEL = date; rerender();
@@ -324,7 +359,7 @@ function startEditing(id){
   const curSel=$("log-cur");
   if (![...curSel.options].some(o=>o.value===e.currency)) curSel.insertAdjacentHTML("beforeend",`<option value="${esc(e.currency)}">${esc(e.currency)}</option>`);
   curSel.value = e.currency; $("log-amt").value = e.amount; $("log-note").value = e.note||""; $("log-date").value = e.date;
-  const r=$("cat-"+e.cat); if(r) r.checked = true;
+  const r=$("kind-"+kindOf(e)); if(r) r.checked = true;
   $("log-submit").textContent = "Save changes"; $("log-cancel").hidden = false;
   $("h-log").textContent = "Edit spend"; $("log-msg").textContent = "";
   updateLogPreview(); rerender();
@@ -456,10 +491,124 @@ const rg = $("rates-grid");
 rg.innerHTML = Object.keys(DEFAULT_RATES).map(c=>`<label for="rate-${c}">${c}<input id="rate-${c}" type="number" step="any" min="0" value="${RATES[c]}"></label>`).join("") + `<button type="button" class="linkbtn" id="rates-reset">Reset</button>`;
 rg.addEventListener("input",e=>{ const c=e.target.id?.replace("rate-",""); const v=parseFloat(e.target.value); if(DEFAULT_RATES[c]&&v>0){ RATES[c]=v; ls.set("sabbatical-rates",RATES); MODEL&&renderDaily(MODEL); } });
 $("rates-reset").addEventListener("click",()=>{ RATES={...DEFAULT_RATES}; try{localStorage.removeItem("sabbatical-rates");}catch(_){} Object.keys(RATES).forEach(c=>$("rate-"+c).value=RATES[c]); MODEL&&renderDaily(MODEL); });
-let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(MODEL && !$("p-daily").hidden) renderDailyChart(MODEL, tripDays(MODEL), isoToday()); },150); });
+let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(MODEL && !$("p-daily").hidden) renderDailyChart(MODEL, tripDays(MODEL), isoToday()); if(MODEL && !$("p-spending").hidden) renderSpending(MODEL); },150); });
 addEventListener("online", ()=>{ if (PENDING.length) syncLog(); });
 
 // ---------- stays
+// ---------- spending tab: where the day-to-day money goes (log entries only, no hotels or flights)
+let SP_FOCUS = null, SP_GRAN = "day";
+function renderSpending(M){
+  const days = tripDays(M); if (!days.length) return;
+  const T = isoToday(), first = days[0].date, last = days[days.length-1].date;
+  const dayOf = Object.fromEntries(days.map(d=>[d.date,d]));
+  const all = logEntries().map(e=>({...e, kind:kindOf(e), country: dayOf[e.date]?.stop.country || (e.date<first?"Before the trip":"After the trip")}));
+  const total = sum(all,e=>e.gbp);
+  const pct = n => total ? Math.round(n/total*100) : 0;
+  const byKind = Object.fromEntries(KINDS.map(x=>[x.k,{t:0,n:0}]));
+  all.forEach(e=>{ byKind[e.kind].t+=e.gbp; byKind[e.kind].n++; });
+  const ranked = KINDS.filter(x=>byKind[x.k].n).sort((a,b)=>byKind[b.k].t-byKind[a.k].t);
+  if (SP_FOCUS && !byKind[SP_FOCUS]?.n) SP_FOCUS = null;
+  const lastDone = T<first ? null : (T>last ? last : T);
+  const elapsed = lastDone ? days.filter(d=>d.date<=lastDone) : [];
+  const spentElapsed = sum(all.filter(e=>lastDone && e.date>=first && e.date<=lastDone), e=>e.gbp);
+  const avg = elapsed.length ? spentElapsed/elapsed.length : 0;
+  const allowAvg = elapsed.length ? sum(elapsed,d=>d.total)/elapsed.length : sum(days,d=>d.total)/days.length;
+  const ref = lastDone || T;
+  const last7 = sum(all.filter(e=>e.date>addD(ref,-7) && e.date<=ref),e=>e.gbp);
+  const prev7 = sum(all.filter(e=>e.date>addD(ref,-14) && e.date<=addD(ref,-7)),e=>e.gbp);
+  const delta = prev7 ? Math.round((last7-prev7)/prev7*100) : null;
+  const firstLogged = all.reduce((m,e)=>!m||e.date<m?e.date:m, "");
+  const top = ranked[0];
+
+  $("sp-stats").innerHTML = `
+    <div class="fstat"><div class="eyebrow">💸 Spent so far</div><div class="v">${gbp(total,2)}</div>
+      <div class="n">${all.length} spend${all.length===1?"":"s"} logged${firstLogged?` since ${fmtD(firstLogged)}`:""}</div></div>
+    <div class="fstat"><div class="eyebrow">📅 Average a day</div><div class="v ${elapsed.length&&avg>allowAvg?"neg":""}">${elapsed.length?gbp(avg,2):"–"}</div>
+      <div class="n">${elapsed.length?`over ${elapsed.length} day${elapsed.length>1?"s":""} · daily budget averages ${gbp(allowAvg,2)}`:`Trip starts ${fmtD(first)}`}</div></div>
+    <div class="fstat hero"><div class="eyebrow">🏆 Top category</div><div class="v sm">${top?`<span class="em" aria-hidden="true">${top.e}</span> ${top.chip}`:"–"}</div>
+      <div class="n">${top?`${gbp(byKind[top.k].t,2)} · ${pct(byKind[top.k].t)}% of everything`:"Log a spend on the Daily tab"}</div></div>
+    <div class="fstat"><div class="eyebrow">📈 Last 7 days</div><div class="v">${gbp(last7,2)}</div>
+      <div class="n">${delta==null ? (last7?"Nothing logged the week before":"Nothing logged yet") : `${delta>=0?"▲":"▼"} ${Math.abs(delta)}% on the 7 days before`}</div></div>`;
+
+  const kmax = top ? byKind[top.k].t : 1;
+  const unused = KINDS.filter(x=>!byKind[x.k].n);
+  $("sp-kinds").innerHTML = ranked.length ? ranked.map(x=>{ const b=byKind[x.k], on=SP_FOCUS===x.k;
+    return `<button type="button" class="krow${on?" on":""}${SP_FOCUS&&!on?" dim":""}" data-kind="${x.k}" aria-pressed="${on}">
+      <span class="em" aria-hidden="true">${x.e}</span>
+      <span class="kl"><b>${x.label}</b><small>${b.n} spend${b.n>1?"s":""} · ${gbp(b.t/b.n,2)} each on average</small></span>
+      <span class="kv"><b>${gbp(b.t,2)}</b><small>${pct(b.t)}%</small></span>
+      <span class="kt"><i style="width:${b.t/kmax*100}%;background:var(${x.c})"></i></span></button>`; }).join("")
+    + (unused.length && ranked.length ? `<p class="note kunused">Nothing yet on ${unused.map(x=>`${x.e} ${x.chip}`).join(" · ")}</p>` : "")
+    : `<p class="note">Nothing logged yet. Spends you add on the Daily tab show up here.</p>`;
+
+  const ents = SP_FOCUS ? all.filter(e=>e.kind===SP_FOCUS) : all;
+  const fk = SP_FOCUS && KIND[SP_FOCUS];
+  $("sp-focus").innerHTML = fk ? `Showing ${fk.e} ${esc(fk.label)} · <button type="button" class="linkbtn" data-kind="${fk.k}">Show all</button>` : "";
+  $("sp-top-sub").textContent = fk ? `${fk.e} ${fk.label}` : "Across every category";
+  const biggest = [...ents].sort((a,b)=>b.gbp-a.gbp).slice(0,6);
+  $("sp-top").innerHTML = biggest.length ? biggest.map(e=>`<li><span class="kem" aria-hidden="true">${KIND[e.kind].e}</span><span class="what2">${esc(e.note||KIND[e.kind].label)}<small>${fmtD(e.date,{weekday:"short",day:"numeric",month:"short"})} · ${esc(e.country)}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}</small></span><span class="amt">${gbp(e.gbp,2)}</span></li>`).join("")
+    : `<li class="note">Nothing logged yet.</li>`;
+
+  document.querySelectorAll("#p-spending [data-gran]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.gran===SP_GRAN));
+  renderSpendChart(days, all, ents, T);
+
+  // by country, in trip order
+  const order = [...new Set(["Before the trip", ...M.groups.map(g=>g.country), "After the trip"])];
+  const byC = {}; all.forEach(e=>{ const c=byC[e.country] ||= {t:0,k:{}}; c.t+=e.gbp; c.k[e.kind]=(c.k[e.kind]||0)+e.gbp; });
+  const cs = order.filter(c=>byC[c]);
+  const cmax = Math.max(1, ...cs.map(c=>byC[c].t));
+  $("sp-country").innerHTML = cs.length ? cs.map(c=>{ const x=byC[c];
+    const nd = days.filter(d=>d.stop.country===c && lastDone && d.date<=lastDone).length;
+    const topK = KINDS.filter(k=>x.k[k.k]).sort((a,b)=>x.k[b.k]-x.k[a.k])[0];
+    const segs = KINDS.filter(k=>x.k[k.k]).map(k=>`<span tabindex="0" style="width:${x.k[k.k]/cmax*100}%;background:var(${k.c})" data-tip="${esc(`<b>${k.e} ${k.label}</b>${c}: ${gbp(x.k[k.k],2)} · ${Math.round(x.k[k.k]/x.t*100)}%`)}"></span>`).join("");
+    return `<div class="crow"><div>${esc(c)}</div><div class="t">${segs}</div><div class="val"><b>${gbp(x.t,2)}</b><small>${nd?`${gbp(x.t/nd,2)}/day · `:""}most on ${topK.e} ${topK.chip.toLowerCase()}</small></div></div>`; }).join("")
+    : `<p class="note">Nothing logged yet.</p>`;
+}
+
+function renderSpendChart(days, all, ents, T){
+  const wrap = $("sp-chart-wrap");
+  const first = days[0].date, last = days[days.length-1].date;
+  const lastLogged = all.reduce((m,e)=>e.date>m?e.date:m, first);
+  let end = [T, lastLogged, addD(first, SP_GRAN==="day"?13:27)].sort().pop(); if (end>last) end = last;
+  const span = days.slice(0, days.findIndex(d=>d.date===end)+1);
+  const periods = [];
+  if (SP_GRAN==="day") span.forEach(d=>periods.push({from:d.date, to:d.date, days:[d], label:fmtD(d.date), name:fmtD(d.date,{weekday:"short",day:"numeric",month:"short"})}));
+  else for (let i=0; i<span.length; i+=7) { const ch=days.slice(i,i+7); periods.push({from:ch[0].date, to:ch[ch.length-1].date, days:ch, label:"Wk "+(i/7+1), name:`Week ${i/7+1} · ${fmtD(ch[0].date)} – ${fmtD(ch[ch.length-1].date)}`}); }
+  periods.forEach(p=>{ p.k={}; p.t=0; ents.filter(e=>e.date>=p.from && e.date<=p.to).forEach(e=>{ p.k[e.kind]=(p.k[e.kind]||0)+e.gbp; p.t+=e.gbp; }); p.budget=sum(p.days,d=>d.total); });
+  const showBudget = !SP_FOCUS;
+  const hi = Math.max(10, ...periods.map(p=>p.t), ...(showBudget?periods.map(p=>p.budget):[]));
+  const raw = hi/4, mag = 10**Math.floor(Math.log10(raw)), step = [1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);
+  const yMax = Math.ceil(hi*1.05/step)*step;
+  const W = Math.max(320, wrap.clientWidth||900), H = 260, m = {l:46,r:12,t:18,b:34};
+  const iw = W-m.l-m.r, ih = H-m.t-m.b, n = periods.length, bw = iw/n;
+  const X = i => m.l + i*bw, Y = v => m.t + ih - v/yMax*ih;
+  let g = `<svg class="fchart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Spending by ${SP_GRAN}, stacked by category">`;
+  for (let v=0; v<=yMax+1e-9; v+=step) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${m.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">£${+v.toFixed(2)}</text>`;
+  const barW = Math.max(2, bw*(SP_GRAN==="day"?0.7:0.6));
+  periods.forEach((p,i)=>{ let acc=0;
+    KINDS.forEach(k=>{ const v=p.k[k.k]; if(!v) return; const y0=Y(acc), y1=Y(acc+v); acc+=v;
+      g += `<rect x="${X(i)+(bw-barW)/2}" y="${y1}" width="${barW}" height="${Math.max(0.5,y0-y1)}" fill="var(${k.c})"/>`; }); });
+  if (showBudget) { let line=""; periods.forEach((p,i)=>{ const y=Y(p.budget); line += (i?` L${X(i)},${y}`:`M${X(i)},${y}`)+` L${X(i+1)},${y}`; });
+    g += `<path d="${line}" fill="none" stroke="var(--ink-2)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round"/>`; }
+  const every = Math.max(1, Math.ceil(n/(iw/58)));
+  periods.forEach((p,i)=>{ if (i%every===0) g += `<text x="${X(i)+bw/2}" y="${H-12}" text-anchor="middle" font-size="11" fill="var(--ink-2)">${esc(p.label)}</text>`; });
+  g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--base)"/>`;
+  const ti = periods.findIndex(p=>T>=p.from && T<=p.to);
+  if (ti>=0 && SP_GRAN==="day") { const tx=X(ti)+bw/2; g += `<line x1="${tx}" x2="${tx}" y1="${m.t-4}" y2="${Y(0)}" stroke="var(--crit)" stroke-width="1.5" stroke-dasharray="3 3" pointer-events="none"/>`; }
+  periods.forEach((p,i)=>{
+    const lines = KINDS.filter(k=>p.k[k.k]).sort((a,b)=>p.k[b.k]-p.k[a.k]).map(k=>`${k.e} ${k.chip} ${gbp(p.k[k.k],2)}`).join("<br>");
+    const tip = `<b>${esc(p.name)}</b>${lines || "Nothing logged"}${p.t?`<br>Total ${gbp(p.t,2)}`:""}${showBudget?` · budget ${gbp(p.budget,2)}`:""}`;
+    g += `<rect x="${X(i)}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent" data-tip="${esc(tip)}"/>`; });
+  wrap.innerHTML = g + `</svg>`;
+  const present = KINDS.filter(k=>periods.some(p=>p.k[k.k]));
+  $("sp-legend").innerHTML = present.map(k=>`<span><i style="background:var(${k.c})"></i>${k.e} ${k.chip}</span>`).join("") + (showBudget?`<span><i class="dash"></i>${SP_GRAN==="day"?"Daily":"Weekly"} budget</span>`:"");
+}
+$("p-spending").addEventListener("click", e=>{
+  const k = e.target.closest("[data-kind]"); if (k) { SP_FOCUS = SP_FOCUS===k.dataset.kind ? null : k.dataset.kind; if (MODEL) renderSpending(MODEL); return; }
+  const gb = e.target.closest("[data-gran]"); if (gb) { SP_GRAN = gb.dataset.gran; if (MODEL) renderSpending(MODEL); }
+});
+
+// ---------- stays & flights
 const stayChip = s => s.cls==="booked"?'<span class="chip booked">Booked</span>':s.cls==="host"?'<span class="chip host">With friends</span>':`<span class="chip todo">${esc(s.st)}</span>`;
 function renderStays(M){
   const t0 = D(M.stops[0].start), end = D(addD(M.stops[M.stops.length-1].start, M.stops[M.stops.length-1].nights));

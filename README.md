@@ -1,6 +1,6 @@
 # Sabbatical 2026–27 dashboard
 
-A static web page that reads `Sabbatical_Plan_and_Budget.xlsx` and shows it as a tabbed dashboard: Daily, Overview, Stays, Flights and Budget. All the figures are calculated in your browser straight from the spreadsheet, so the spreadsheet stays the single source of truth. There's no server and no build step.
+A static web page that reads `Sabbatical_Plan_and_Budget.xlsx` and shows it as a tabbed dashboard: Daily, Spending, Overview, Stays, Flights and Budget. All the figures are calculated in your browser straight from the spreadsheet, so the spreadsheet stays the single source of truth. There's no server and no build step.
 
 ## Files
 

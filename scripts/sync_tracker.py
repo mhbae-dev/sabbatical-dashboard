@@ -28,6 +28,8 @@ COLS = "ABCDEF"      # Date, Country, Category, Description, Amount (£), Status
 ID_COL = "J"         # Log ID
 CATEGORY = {"food": "Food", "transport": "Local transport", "other": "Activities"}
 LABEL = {"food": "Food", "transport": "Transport", "other": "Activities & other"}
+KIND_LABEL = {"meals": "Meals", "coffee": "Coffee & cafés", "drinks": "Drinks & nights out", "groceries": "Groceries & snacks",
+              "transport": "Transport", "activities": "Activities", "shopping": "Shopping", "essentials": "Essentials", "misc": "Other"}
 
 
 def stops(wb):
@@ -62,7 +64,7 @@ def row_for(entry, legs):
         day.strftime("%d/%m/%Y"),
         country_for(day, legs),
         CATEGORY.get(entry.get("cat"), "Other"),
-        (entry.get("note") or "").strip() or LABEL.get(entry.get("cat"), "Daily spend"),
+        (entry.get("note") or "").strip() or KIND_LABEL.get(entry.get("kind")) or LABEL.get(entry.get("cat"), "Daily spend"),
         round(float(entry.get("gbp") or 0), 2),
         "Paid",
     ]

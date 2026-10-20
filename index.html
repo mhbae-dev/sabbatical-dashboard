@@ -48,6 +48,7 @@
   <div id="app" class="panel" hidden>
   <nav class="tabs" role="tablist" aria-label="Dashboard sections">
     <button class="tab" role="tab" id="tab-daily" aria-controls="p-daily" data-tab="daily">Daily</button>
+    <button class="tab" role="tab" id="tab-spending" aria-controls="p-spending" data-tab="spending">Spending</button>
     <button class="tab" role="tab" id="tab-overview" aria-controls="p-overview" data-tab="overview">Overview</button>
     <button class="tab" role="tab" id="tab-stays" aria-controls="p-stays" data-tab="stays">Stays</button>
     <button class="tab" role="tab" id="tab-flights" aria-controls="p-flights" data-tab="flights">Flights</button>
@@ -88,11 +89,7 @@
             <select id="log-cur"></select>
           </div>
           <div class="gbp-preview" id="log-gbp" aria-live="polite"></div>
-          <fieldset class="seg-ctl"><legend class="sr">Category</legend>
-            <input type="radio" name="log-cat" id="cat-food" value="food" checked><label for="cat-food">Food</label>
-            <input type="radio" name="log-cat" id="cat-transport" value="transport"><label for="cat-transport">Transport</label>
-            <input type="radio" name="log-cat" id="cat-other" value="other"><label for="cat-other">Activities &amp; other</label>
-          </fieldset>
+          <fieldset class="kind-ctl" id="kind-ctl"><legend class="sr">What kind of spend</legend></fieldset>
           <label class="sr" for="log-note">Note</label>
           <input id="log-note" type="text" maxlength="120" placeholder="What was it? (optional)">
           <div class="log-actions">
@@ -130,6 +127,35 @@
         </div>
       </details>
     </section>
+  </section>
+
+  <!-- SPENDING -->
+  <section class="panel" role="tabpanel" id="p-spending" aria-labelledby="tab-spending" hidden>
+    <div class="food-top" id="sp-stats"></div>
+    <div class="grid2">
+      <section class="card" aria-labelledby="h-sp-where">
+        <div class="card-head"><h2 id="h-sp-where">Where your money goes</h2><span class="sub">Tap a category to filter</span></div>
+        <div class="klist" id="sp-kinds"></div>
+      </section>
+      <section class="card" aria-labelledby="h-sp-top">
+        <div class="card-head"><h2 id="h-sp-top">Biggest spends</h2><span class="sub" id="sp-top-sub"></span></div>
+        <ul class="entries toplist" id="sp-top"></ul>
+      </section>
+    </div>
+    <section class="card" aria-labelledby="h-sp-trend">
+      <div class="card-head"><h2 id="h-sp-trend">Spending trend</h2>
+        <div class="sp-head-r"><span class="sub" id="sp-focus"></span>
+          <div class="gran" role="group" aria-label="Group by"><button type="button" data-gran="day">By day</button><button type="button" data-gran="week">By week</button></div>
+        </div>
+      </div>
+      <div id="sp-chart-wrap" style="min-width:0"></div>
+      <div class="legend" id="sp-legend"></div>
+    </section>
+    <section class="card" aria-labelledby="h-sp-country">
+      <div class="card-head"><h2 id="h-sp-country">By country</h2><span class="sub">Bar colours show the mix of categories</span></div>
+      <div id="sp-country"></div>
+    </section>
+    <p class="note" style="margin:0">Only the day-to-day spends you log on the Daily tab. Hotels, flights and insurance are left out.</p>
   </section>
 
   <!-- STAYS -->
