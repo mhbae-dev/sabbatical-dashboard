@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-20T03:48:22.049Z",
+ "updated": "2026-10-20T05:34:23.942Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -67,6 +67,18 @@
    "rate": 1,
    "note": "TMoney",
    "ts": "2026-10-20T03:48:21.411Z"
+  },
+  {
+   "id": "mvg90jc7vf95",
+   "date": "2026-10-20",
+   "cat": "food",
+   "kind": "meals",
+   "amount": 8.5,
+   "currency": "GBP",
+   "gbp": 8.5,
+   "rate": 1,
+   "note": "Sushi - Lunch",
+   "ts": "2026-10-20T05:34:22.951Z"
   }
  ]
 }
