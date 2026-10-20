@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-20T22:52:03.219Z",
+ "updated": "2026-10-20T23:27:40.222Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -128,6 +128,19 @@
    "rate": 1,
    "note": "CU",
    "ts": "2026-10-20T22:51:28.505Z"
+  },
+  {
+   "id": "mvhbcrzpy1g5",
+   "date": "2026-10-22",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "cash",
+   "amount": 23.25,
+   "currency": "GBP",
+   "gbp": 23.25,
+   "rate": 1,
+   "note": "Narita Express",
+   "ts": "2026-10-20T23:27:39.445Z"
   }
  ]
 }
