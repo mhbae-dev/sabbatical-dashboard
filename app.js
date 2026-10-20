@@ -1,7 +1,7 @@
 (function(){
 const CATS = [
   {k:"Flights", c:"--c1"},{k:"Accommodation", c:"--c2"},{k:"Food", c:"--c3"},
-  {k:"Local transport", c:"--c4"},{k:"Activities", c:"--c5"},{k:"Insurance & admin", c:"--c6"}
+  {k:"Local transport", c:"--c4"},{k:"Activities", c:"--c5"},{k:"Shopping & misc", c:"--c7"},{k:"Insurance & admin", c:"--c6"}
 ];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const gbp = (n,dp) => { const d = dp ?? (Math.abs(n%1)>0.001 ? 2 : 0); return (n<0?"−":"")+"£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:d,maximumFractionDigits:d}); };
@@ -44,13 +44,13 @@ function build(doc){
     let meal = cls==="host" ? "With friends" : /incl\.? (meals|dinner)|meals incl/i.test(s.hotel?.notes||"") ? "Meals incl." : "";
     if (s.nights===1 && s.start===d.stops[0].start) meal = meal || "Land late";
     const cur = s.country==="Malaysia & Singapore" && /singapore/i.test(s.where) ? ["MYR","SGD"] : (COUNTRY_CUR[s.country]||[]);
-    return {...s, st, cls, acc, food, total:acc+food+s.trans+s.act, meal, cur};
+    return {...s, st, cls, acc, food, total:acc+food+s.trans+s.act+s.misc, meal, cur};
   });
   const flights = d.flights.map(f=>({...f, booked:/^booked$/i.test(f.status||"")}));
   const groups=[]; stops.forEach(s=>{ const g=groups[groups.length-1]; if(g&&g.country===s.country){g.nights+=s.nights;g.total+=s.total;g.food+=s.food;g.stops.push(s);} else groups.push({country:s.country,start:s.start,nights:s.nights,total:s.total,food:s.food,stops:[s]}); });
   const planned = {
     "Flights": sum(flights,f=>f.cost), "Accommodation": sum(stops,s=>s.acc), "Food": sum(stops,s=>s.food),
-    "Local transport": sum(stops,s=>s.trans), "Activities": sum(stops,s=>s.act), "Insurance & admin": sum(d.admin,a=>a.amt)
+    "Local transport": sum(stops,s=>s.trans), "Activities": sum(stops,s=>s.act), "Shopping & misc": sum(stops,s=>s.misc), "Insurance & admin": sum(d.admin,a=>a.amt)
   };
   const LOG = logEntries();
   // Tracker rows copied from the log (Log ID in column J) are counted once, from the log, which is always the newer copy
@@ -137,15 +137,22 @@ const local = (g, c) => { const x=CUR[c]; if(!x || c==="GBP") return ""; const v
 const localOf = (g, s) => (s?.cur||[]).map(c=>local(g,c)).filter(Boolean).join(" · ");
 const fmtLocal = (amt, c) => (CUR[c]?.sym||c+" ") + Number(amt).toLocaleString("en-GB",{maximumFractionDigits: c==="GBP"?2:0});
 
-// Daily categories: the three ground-cost lines you spend day to day
+// Log categories: one per Budget-tab line. The first four have a daily allowance (from the Itinerary);
+// the rest are logged against their Budget line but sit outside the day's "left to spend".
 const DCATS = [
-  {k:"food", label:"Food", c:"--c3", budgetCat:"Food"},
-  {k:"transport", label:"Transport", c:"--c4", budgetCat:"Local transport"},
-  {k:"other", label:"Activities & other", c:"--c5", budgetCat:"Activities"}
+  {k:"food", label:"Food", c:"--c3", budgetCat:"Food", daily:true},
+  {k:"transport", label:"Local transport", c:"--c4", budgetCat:"Local transport", daily:true},
+  {k:"other", label:"Activities", c:"--c5", budgetCat:"Activities", daily:true},
+  {k:"shop", label:"Shopping & misc", c:"--c7", budgetCat:"Shopping & misc", daily:true},
+  {k:"accom", label:"Accommodation", c:"--c2", budgetCat:"Accommodation", daily:false},
+  {k:"flights", label:"Flights", c:"--c1", budgetCat:"Flights", daily:false},
+  {k:"admin", label:"Insurance & admin", c:"--c6", budgetCat:"Insurance & admin", daily:false}
 ];
+const DAILY_CATS = DCATS.filter(c=>c.daily);
+const isDaily = e => !!DCAT[e.cat]?.daily;
 const DCAT = Object.fromEntries(DCATS.map(c=>[c.k,c]));
 
-// Spending kinds: finer than the three budget lines (each one rolls up into food, transport or other)
+// Spending kinds: finer than the budget lines; each one rolls up into exactly one log category above
 const KINDS = [
   {k:"meals",      e:"🍜", chip:"Meals",      label:"Meals",               cat:"food",      c:"--k1"},
   {k:"coffee",     e:"☕", chip:"Coffee",     label:"Coffee & cafés",      cat:"food",      c:"--k2"},
@@ -153,9 +160,12 @@ const KINDS = [
   {k:"groceries",  e:"🛒", chip:"Groceries",  label:"Groceries & snacks",  cat:"food",      c:"--k4"},
   {k:"transport",  e:"🚇", chip:"Transport",  label:"Transport",           cat:"transport", c:"--k5"},
   {k:"activities", e:"🎟️", chip:"Activities", label:"Activities",          cat:"other",     c:"--k6"},
-  {k:"shopping",   e:"🛍️", chip:"Shopping",   label:"Shopping",            cat:"other",     c:"--k7"},
-  {k:"essentials", e:"🧴", chip:"Essentials", label:"Essentials",          cat:"other",     c:"--k8"},
-  {k:"misc",       e:"✨", chip:"Other",      label:"Other",               cat:"other",     c:"--k9"}
+  {k:"shopping",   e:"🛍️", chip:"Shopping",   label:"Shopping",            cat:"shop",      c:"--k7"},
+  {k:"essentials", e:"🧴", chip:"Essentials", label:"Essentials",          cat:"shop",      c:"--k8"},
+  {k:"misc",       e:"✨", chip:"Other",      label:"Other",               cat:"shop",      c:"--k9"},
+  {k:"hotel",      e:"🏨", chip:"Hotel",      label:"Accommodation",       cat:"accom",     c:"--c2"},
+  {k:"flight",     e:"✈️", chip:"Flight",     label:"Flights",             cat:"flights",   c:"--c1"},
+  {k:"admin",      e:"📄", chip:"Visa & admin", label:"Insurance, visas & admin", cat:"admin", c:"--c6"}
 ];
 const KIND = Object.fromEntries(KINDS.map(x=>[x.k,x]));
 // Older entries have no kind yet: guess one from the note, within the budget line they were logged under
@@ -171,24 +181,42 @@ const KIND_WORDS = [
 function kindOf(e){
   if (e.kind && KIND[e.kind]) return e.kind;
   if (e.cat==="transport") return "transport";
+  if (e.cat==="accom") return "hotel";
+  if (e.cat==="flights") return "flight";
+  if (e.cat==="admin") return "admin";
+  // "other" used to cover activities, shopping, essentials and everything else
+  const group = e.cat==="other" ? ["other","shop"] : [e.cat];
   const n = e.note || "";
-  for (const [k,re] of KIND_WORDS) if (KIND[k].cat===e.cat && re.test(n)) return k;
-  return e.cat==="food" ? "meals" : "misc";
+  for (const [k,re] of KIND_WORDS) if (group.includes(KIND[k].cat) && re.test(n)) return k;
+  return e.cat==="food" ? "meals" : e.cat==="other" ? "activities" : "misc";
 }
-$("kind-ctl").insertAdjacentHTML("beforeend", KINDS.map((x,i)=>`<input type="radio" name="log-kind" id="kind-${x.k}" value="${x.k}"${i?"":" checked"}><label for="kind-${x.k}"><span class="em" aria-hidden="true">${x.e}</span>${x.chip}</label>`).join(""));
+// The kind decides the category, so a spend always lands on the matching Budget line
+const normEntry = e => { const kind = kindOf(e); return {...e, kind, cat:KIND[kind].cat}; };
+const chip = (x,i) => `<input type="radio" name="log-kind" id="kind-${x.k}" value="${x.k}"${i?"":" checked"}><label for="kind-${x.k}"><span class="em" aria-hidden="true">${x.e}</span>${x.chip}</label>`;
+$("kind-ctl").insertAdjacentHTML("beforeend",
+  KINDS.filter(x=>DCAT[x.cat].daily).map(chip).join("") +
+  `<span class="kind-sep">Not from the daily budget – counts on its own Budget line</span>` +
+  KINDS.filter(x=>!DCAT[x.cat].daily).map((x)=>chip(x,1)).join(""));
+$("kind-ctl").insertAdjacentHTML("afterend", `<div class="kind-hint" id="kind-hint" aria-live="polite"></div>`);
+function updateKindHint(){
+  const k = (document.querySelector('input[name="log-kind"]:checked')||{}).value; const c = k && DCAT[KIND[k].cat];
+  $("kind-hint").innerHTML = c ? `Counts under <b>${esc(c.budgetCat)}</b> on the Budget tab${c.daily?" · comes out of today's budget":" · not from today's budget"}` : "";
+}
+$("kind-ctl").addEventListener("change", updateKindHint); updateKindHint();
 
 function tripDays(M){
   const days=[]; M.stops.forEach(s=>{ for(let i=0;i<s.nights;i++){
-    const allow = {food:s.foodD, transport:s.trans/s.nights, other:s.act/s.nights};
-    days.push({date:addD(s.start,i), stop:s, i, allow, total:allow.food+allow.transport+allow.other});
+    const allow = {food:s.foodD, transport:s.trans/s.nights, other:s.act/s.nights, shop:s.misc/s.nights};
+    days.push({date:addD(s.start,i), stop:s, i, allow, total:allow.food+allow.transport+allow.other+allow.shop});
   }}); return days;
 }
 const isoToday = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
 let SEL = null;
 
 function dayActuals(date){
-  const out={food:0,transport:0,other:0,total:0,entries:[]};
-  logEntries().filter(e=>e.date===date).forEach(e=>{ out[e.cat]=(out[e.cat]||0)+e.gbp; out.total+=e.gbp; out.entries.push(e); });
+  // total = spends that come out of the daily budget; outside = hotel, flight and admin spends logged that day
+  const out={food:0,transport:0,other:0,shop:0,total:0,outside:0,entries:[]};
+  logEntries().filter(e=>e.date===date).forEach(e=>{ out[e.cat]=(out[e.cat]||0)+e.gbp; if (isDaily(e)) out.total+=e.gbp; else out.outside+=e.gbp; out.entries.push(e); });
   return out;
 }
 
@@ -221,12 +249,14 @@ function renderDaily(M){
     <div class="big ${over?"neg":""}">${gbp(Math.abs(left),2)}</div>
     <div class="loc">${localOf(Math.abs(left), s) ? "≈ "+localOf(Math.abs(left), s) : ""}</div>
     <div class="n">${gbp(day.total,2)} daily budget · ${gbp(act.total,2)} spent${s.meal?` · <span class="meal">${s.meal}</span>`:""}</div>`;
-  $("day-cats").innerHTML = DCATS.map(c=>{
+  const outs = DCATS.filter(c=>!c.daily && act[c.k]);
+  $("day-cats").innerHTML = DAILY_CATS.map(c=>{
     const a=day.allow[c.k], sp=act[c.k]||0, pct=a>0?Math.min(100,sp/a*100):(sp>0?100:0), o=sp>a+0.005;
     return `<div class="dcat"><div class="top"><span><i style="background:var(${c.c})"></i>${c.label}</span><span class="num"><b class="${o?"neg":""}">${gbp(sp,2)}</b> of ${gbp(a,2)}</span></div>
       <div class="meter"><div style="width:${pct}%;background:var(${o?"--crit":c.c})"></div></div>
       <div class="n">${o?`${gbp(sp-a,2)} over`:`${gbp(a-sp,2)} left`}${localOf(Math.max(0,a-sp),s)&&!o?` ≈ ${localOf(a-sp,s)}`:""}</div></div>`;
   }).join("");
+  if (outs.length) $("day-cats").insertAdjacentHTML("beforeend", `<p class="note dcat-out">Also logged today, outside the daily budget: ${outs.map(c=>`<i style="background:var(${c.c})"></i>${c.label} ${gbp(act[c.k],2)}`).join(" · ")}</p>`);
 
   // entries for the day
   $("day-entries").innerHTML = act.entries.length ? act.entries.sort((a,b)=>(a.ts||"").localeCompare(b.ts||"")).map(e=>`
@@ -248,10 +278,10 @@ function renderDaily(M){
   const lastDone = T<first ? null : (T>last ? last : T);
   const doneDays = lastDone ? days.filter(d=>d.date<=lastDone) : [];
   const allowToDate = sum(doneDays,d=>d.total);
-  const actualToDate = sum(logEntries().filter(e=>lastDone && e.date<=lastDone),e=>e.gbp);
+  const actualToDate = sum(logEntries().filter(e=>isDaily(e) && lastDone && e.date<=lastDone),e=>e.gbp);
   const totalDaily = sum(days,d=>d.total);
   const remainingDays = days.filter(d=>d.date>=(lastDone?T:first)).length;
-  const spentBeforeToday = sum(logEntries().filter(e=>e.date<T),e=>e.gbp);
+  const spentBeforeToday = sum(logEntries().filter(e=>isDaily(e) && e.date<T),e=>e.gbp);
   const allowBeforeToday = sum(days.filter(d=>d.date<T),d=>d.total);
   const pace = remainingDays ? (totalDaily - spentBeforeToday)/remainingDays : 0;
   const planPace = remainingDays ? sum(days.filter(d=>d.date>=T),d=>d.total)/remainingDays : 0;
@@ -270,17 +300,17 @@ function renderDaily(M){
   renderDailyChart(M, days, T);
 
   // per-stop table
-  let t = `<thead><tr><th>Stop</th><th>Dates</th><th class="r">Food</th><th class="r">Transport</th><th class="r">Other</th><th class="r fd">Per day</th><th class="r">Local</th><th class="r">Actual / day</th></tr></thead><tbody>`;
+  let t = `<thead><tr><th>Stop</th><th>Dates</th><th class="r">Food</th><th class="r">Transport</th><th class="r">Activities</th><th class="r">Shopping</th><th class="r fd">Per day</th><th class="r">Local</th><th class="r">Actual / day</th></tr></thead><tbody>`;
   M.groups.forEach(g=>{
-    t += `<tr class="grp"><td colspan="8">${esc(g.country)}</td></tr>`;
+    t += `<tr class="grp"><td colspan="9">${esc(g.country)}</td></tr>`;
     g.stops.forEach(st=>{
       const sd = days.filter(d=>d.stop===st), pd = sd[0]?.total||0;
       const logged = sd.filter(d=>d.date<=T && d.date>=first && T>=first);
       const actAvg = logged.length ? sum(logged,d=>dayActuals(d.date).total)/logged.length : null;
-      t += `<tr${st===s?' class="cur"':""}><td>${esc(short(st.where))}${st.meal?`<span class="meal">${st.meal}</span>`:""}</td><td class="nw">${fmtD(st.start)} – ${fmtD(addD(st.start,st.nights))}</td><td class="r">${gbp(st.foodD,2)}</td><td class="r">${gbp(st.trans/st.nights,2)}</td><td class="r">${gbp(st.act/st.nights,2)}</td><td class="r fd">${gbp(pd,2)}</td><td class="r mono">${localOf(pd,st)}</td><td class="r ${actAvg!=null&&actAvg>pd?"neg":""}">${actAvg==null?"–":gbp(actAvg,2)}</td></tr>`;
+      t += `<tr${st===s?' class="cur"':""}><td>${esc(short(st.where))}${st.meal?`<span class="meal">${st.meal}</span>`:""}</td><td class="nw">${fmtD(st.start)} – ${fmtD(addD(st.start,st.nights))}</td><td class="r">${gbp(st.foodD,2)}</td><td class="r">${gbp(st.trans/st.nights,2)}</td><td class="r">${gbp(st.act/st.nights,2)}</td><td class="r">${gbp(st.misc/st.nights,2)}</td><td class="r fd">${gbp(pd,2)}</td><td class="r mono">${localOf(pd,st)}</td><td class="r ${actAvg!=null&&actAvg>pd?"neg":""}">${actAvg==null?"–":gbp(actAvg,2)}</td></tr>`;
     });
   });
-  t += `<tr class="total"><td>Whole trip</td><td></td><td class="r">${gbp(M.planned.Food)}</td><td class="r">${gbp(M.planned["Local transport"])}</td><td class="r">${gbp(M.planned.Activities)}</td><td class="r">${gbp(totalDaily/days.length,2)} avg</td><td></td><td></td></tr></tbody>`;
+  t += `<tr class="total"><td>Whole trip</td><td></td><td class="r">${gbp(M.planned.Food)}</td><td class="r">${gbp(M.planned["Local transport"])}</td><td class="r">${gbp(M.planned.Activities)}</td><td class="r">${gbp(M.planned["Shopping & misc"])}</td><td class="r">${gbp(totalDaily/days.length,2)} avg</td><td></td><td></td></tr></tbody>`;
   $("daily-table").innerHTML = t;
   renderSyncStatus();
 }
@@ -363,7 +393,7 @@ function startEditing(id){
   const curSel=$("log-cur");
   if (![...curSel.options].some(o=>o.value===e.currency)) curSel.insertAdjacentHTML("beforeend",`<option value="${esc(e.currency)}">${esc(e.currency)}</option>`);
   curSel.value = e.currency; $("log-amt").value = e.amount; $("log-note").value = e.note||""; $("log-date").value = e.date;
-  const r=$("kind-"+kindOf(e)); if(r) r.checked = true;
+  const r=$("kind-"+kindOf(e)); if(r) r.checked = true; updateKindHint();
   $(e.pay==="cash"?"pay-cash":"pay-card").checked = true;
   $("log-submit").textContent = "Save changes"; $("log-cancel").hidden = false;
   $("h-log").textContent = "Edit spend"; $("log-msg").textContent = "";
@@ -401,7 +431,7 @@ function applyOps(entries, ops){
 }
 function logEntries(){
   const pendingIds = new Set(PENDING.filter(o=>o.op==="add"||o.op==="edit").map(o=>o.entry.id));
-  return applyOps(REMOTE.entries||[], PENDING).map(e=>pendingIds.has(e.id)?{...e,pending:true}:e);
+  return applyOps(REMOTE.entries||[], PENDING).map(e=>normEntry(pendingIds.has(e.id)?{...e,pending:true}:e));
 }
 function queueOp(op){ PENDING.push(op); ls.set("sabbatical-pending", PENDING); syncLog(); }
 
@@ -609,7 +639,7 @@ function renderSpending(M){
   const days = tripDays(M); if (!days.length) return;
   const T = isoToday(), first = days[0].date, last = days[days.length-1].date;
   const dayOf = Object.fromEntries(days.map(d=>[d.date,d]));
-  const all = logEntries().map(e=>({...e, kind:kindOf(e), country: dayOf[e.date]?.stop.country || (e.date<first?"Before the trip":"After the trip")}));
+  const all = logEntries().filter(isDaily).map(e=>({...e, kind:kindOf(e), country: dayOf[e.date]?.stop.country || (e.date<first?"Before the trip":"After the trip")}));
   const total = sum(all,e=>e.gbp);
   const pct = n => total ? Math.round(n/total*100) : 0;
   const byKind = Object.fromEntries(KINDS.map(x=>[x.k,{t:0,n:0}]));
@@ -802,6 +832,9 @@ function renderBudget(M){
 
   const byC={}; M.stops.forEach(s=>{ byC[s.country]=byC[s.country]||{total:0,nights:0}; byC[s.country].total+=s.total; byC[s.country].nights+=s.nights; });
   const spentC={}; M.d.spend.filter(s=>byC[s.country] && s.cat!=="Flights" && s.cat!=="Insurance & admin").forEach(s=>spentC[s.country]=(spentC[s.country]||0)+s.amt);
+  // spends logged on the Daily tab count towards the country you were in that day
+  const dayC = Object.fromEntries(tripDays(M).map(d=>[d.date,d.stop.country]));
+  logEntries().filter(e=>dayC[e.date] && e.cat!=="flights" && e.cat!=="admin").forEach(e=>spentC[dayC[e.date]]=(spentC[dayC[e.date]]||0)+e.gbp);
   const cmax=Math.max(...Object.values(byC).map(x=>x.total));
   $("cbars").innerHTML = Object.entries(byC).map(([c,x])=>{ const sp=spentC[c]||0;
     return `<div class="cbar" tabindex="0" data-tip="${esc(`<b>${c}</b>${x.nights} nights · ${gbp(x.total)} budget<br>${gbp(Math.round(x.total/x.nights))} per day${sp?`<br>Committed so far: ${gbp(sp)}`:""}`)}"><div>${esc(c)}</div><div class="t"><div style="width:${x.total/cmax*100}%"></div>${sp?`<div class="spent" style="width:${Math.max(sp/cmax*100,0.8)}%"></div>`:""}</div><div class="val"><b>${gbp(x.total)}</b><small>${x.nights}n · ${gbp(Math.round(x.total/x.nights))}/day</small></div></div>`; }).join("");
@@ -810,7 +843,8 @@ function renderBudget(M){
   $("spend-sum").textContent = `${gbp(M.totalCommitted)} across ${M.d.spend.length} bookings${M.logCount?` + ${M.logCount} daily spends`:""}`;
   $("spend").innerHTML = `<thead><tr><th>Date</th><th>What</th><th class="r">Amount</th></tr></thead><tbody>` +
     M.d.spend.map(s=>`<tr><td class="nw">${/^\d{4}-\d\d-\d\d$/.test(s.date||"")?fmtD(s.date):esc(s.date)}</td><td><span class="sw" style="background:var(${catC[s.cat]||"--muted"})"></span>${esc(s.desc)}<div class="note">${esc(s.cat)} · ${esc(s.country)}${s.status&&s.status!=="Paid"?" · "+esc(s.status):""}</div></td><td class="r">${gbp(s.amt)}</td></tr>`).join("") +
-    (M.logCount?`<tr><td class="nw">Daily</td><td><span class="sw" style="background:var(--c3)"></span>Day-to-day spending you've logged<div class="note">${M.logCount} entries · see the Daily tab</div></td><td class="r">${gbp(M.logTotal,2)}</td></tr>`:"") +
+    DCATS.map(c=>{ const es=logEntries().filter(e=>e.cat===c.k); if(!es.length) return "";
+      return `<tr><td class="nw">Daily log</td><td><span class="sw" style="background:var(${c.c})"></span>${c.label} logged on the Daily tab<div class="note">${es.length} entr${es.length===1?"y":"ies"} · counted under ${esc(c.budgetCat)}</div></td><td class="r">${gbp(sum(es,e=>e.gbp),2)}</td></tr>`; }).join("") +
     `<tr class="total"><td></td><td>Total committed</td><td class="r">${gbp(M.totalCommitted)}</td></tr></tbody>`;
 }
 
@@ -850,7 +884,7 @@ function parseWorkbook(buf){
     data.stops.push({
       country: val("Itinerary","A"+r), where: val("Itinerary","B"+r), start: d, nights,
       accN: hasHotels && raw("Hotels","H"+r)!=null ? num("Hotels","H"+r) : num("Itinerary","E"+r),
-      foodD: num("Itinerary","F"+r), trans: num("Itinerary","G"+r), act: num("Itinerary","H"+r), note: val("Itinerary","N"+r),
+      foodD: num("Itinerary","F"+r), trans: num("Itinerary","G"+r), act: num("Itinerary","H"+r), misc: num("Itinerary","O"+r), note: val("Itinerary","N"+r),
       hotel: { name:H("F"), status:H("G") || ({"Yes":"Booked","N/A – host":"Staying with friends"}[val("Itinerary","M"+r)] || "To book"),
                payment:H("J"), ref:H("K"), cancel:H("L"), contact:H("M"), notes:H("N") }
     });

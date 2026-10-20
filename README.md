@@ -38,7 +38,21 @@ The spreadsheet in this repository is the single source of truth. Change it here
 
 ## Logging daily spends (Daily tab)
 
-The Daily tab shows today's budget: food + local transport + activities & other, taken from the Itinerary for the stop you're at. It also shows how much of it is left. Add what you spend with **Log a spend**. Amounts in local currency are converted to £ with the rates under *Exchange rates*.
+The Daily tab shows today's budget: food + local transport + activities + shopping & misc, taken from the Itinerary for the stop you're at (Shopping & misc is column O).
+
+Every spend type you pick when logging belongs to exactly one line on the Budget tab, so the two always agree:
+
+| Spend type | Budget line | Daily budget? |
+|---|---|---|
+| Meals, Coffee, Drinks, Groceries | Food | yes |
+| Transport | Local transport | yes |
+| Activities | Activities | yes |
+| Shopping, Essentials, Other | Shopping & misc | yes |
+| Hotel | Accommodation | no |
+| Flight | Flights | no |
+| Visa & admin | Insurance & admin | no |
+
+Hotel, Flight and Visa & admin spends count towards their Budget line and Committed, but don't come out of the day's "left to spend". It also shows how much of it is left. Add what you spend with **Log a spend**. Amounts in local currency are converted to £ with the rates under *Exchange rates*.
 
 Spends are saved to `spend-log.json` in this repository. They count towards *Committed* on the Overview and Budget tabs.
 
@@ -46,7 +60,7 @@ Spends are saved to `spend-log.json` in this repository. They count towards *Com
 
 Whenever `spend-log.json` changes, the **Sync spend log to Tracker** GitHub Action (`.github/workflows/sync-tracker.yml`) updates the spreadsheet's Tracker sheet to match the log and commits it. It runs `scripts/sync_tracker.py`, then recalculates the formulas in LibreOffice, because the page reads the calculated values. A run takes 1–2 minutes.
 
-- **New entry**: a row is added at the bottom with the date, the country from the Itinerary for that date ("Pre-trip" before the trip), the category (Food, Local transport or Activities), the note, the £ amount and status Paid.
+- **New entry**: a row is added at the bottom with the date, the country from the Itinerary for that date ("Pre-trip" before the trip), the Budget line from the table above, the note, the £ amount and status Paid.
 - **Edited entry**: its row is rewritten in place. The log is the master copy for these rows, so editing them in the spreadsheet won't stick.
 - **Deleted entry**: its row is removed.
 

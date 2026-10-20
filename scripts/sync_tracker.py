@@ -26,10 +26,19 @@ LOG = sys.argv[2] if len(sys.argv) > 2 else "spend-log.json"
 FIRST = 5            # first data row on the Tracker (row 4 is the header)
 COLS = "ABCDEF"      # Date, Country, Category, Description, Amount (£), Status
 ID_COL = "J"         # Log ID
-CATEGORY = {"food": "Food", "transport": "Local transport", "other": "Activities"}
-LABEL = {"food": "Food", "transport": "Transport", "other": "Activities & other"}
+# Log category -> Budget line (Tracker column C). Must match DCATS in app.js.
+CATEGORY = {"food": "Food", "transport": "Local transport", "other": "Activities", "shop": "Shopping & misc",
+            "accom": "Accommodation", "flights": "Flights", "admin": "Insurance & admin"}
+LABEL = {"food": "Food", "transport": "Transport", "other": "Activities", "shop": "Shopping & misc",
+         "accom": "Accommodation", "flights": "Flights", "admin": "Insurance & admin"}
+# The kind decides the category (same as KINDS in app.js), so older entries logged under "other"
+# as shopping / essentials / other move to Shopping & misc.
+KIND_CAT = {"meals": "food", "coffee": "food", "drinks": "food", "groceries": "food", "transport": "transport",
+            "activities": "other", "shopping": "shop", "essentials": "shop", "misc": "shop",
+            "hotel": "accom", "flight": "flights", "admin": "admin"}
 KIND_LABEL = {"meals": "Meals", "coffee": "Coffee & cafés", "drinks": "Drinks & nights out", "groceries": "Groceries & snacks",
-              "transport": "Transport", "activities": "Activities", "shopping": "Shopping", "essentials": "Essentials", "misc": "Other"}
+              "transport": "Transport", "activities": "Activities", "shopping": "Shopping", "essentials": "Essentials", "misc": "Other",
+              "hotel": "Accommodation", "flight": "Flight", "admin": "Insurance, visas & admin"}
 
 
 def stops(wb):
@@ -63,8 +72,8 @@ def row_for(entry, legs):
     return [
         day.strftime("%d/%m/%Y"),
         country_for(day, legs),
-        CATEGORY.get(entry.get("cat"), "Other"),
-        (entry.get("note") or "").strip() or KIND_LABEL.get(entry.get("kind")) or LABEL.get(entry.get("cat"), "Daily spend"),
+        CATEGORY.get(KIND_CAT.get(entry.get("kind"), entry.get("cat")), "Other"),
+        (entry.get("note") or "").strip() or KIND_LABEL.get(entry.get("kind")) or LABEL.get(KIND_CAT.get(entry.get("kind"), entry.get("cat")), "Daily spend"),
         round(float(entry.get("gbp") or 0), 2),
         "Paid",
     ]
