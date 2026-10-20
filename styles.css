@@ -365,3 +365,21 @@ code{font-family:var(--f-mono);font-size:.9em}
   .tonight{grid-template-columns:1fr}
   .t-next{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:16px}
 }
+
+/* Card pay-back reminder + card/cash toggle */
+.pay-ctl{border:0;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pay-ctl input{position:absolute;opacity:0;pointer-events:none}
+.pay-ctl label{text-align:center;font-size:13px;font-weight:600;padding:7px 6px;border:1px solid var(--base);border-radius:10px;cursor:pointer;color:var(--ink-2)}
+.pay-ctl input:checked + label{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.pay-ctl input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+.payback{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;border-radius:14px;padding:14px 16px;border:1px solid var(--line);background:var(--surface)}
+.payback b{font-size:16px}
+.payback small{display:block;font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.payback .pb-ico{font-size:26px;line-height:1}
+.payback.due{background:color-mix(in srgb,var(--warn) 16%,var(--surface));border-color:color-mix(in srgb,var(--warn) 60%,transparent)}
+.payback.due b{font-size:18px}
+.payback.done{background:var(--food-soft)}
+.payback.quiet b{font-size:14.5px;font-weight:600}
+.payback.quiet .pb-ico{font-size:20px}
+.pb-earlier{grid-column:1 / -1;font-size:13px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
+@media (max-width:560px){ .payback{grid-template-columns:auto minmax(0,1fr)} .payback > .btn,.payback > .linkbtn{grid-column:1 / -1;justify-self:start} }

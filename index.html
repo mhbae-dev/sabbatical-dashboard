@@ -74,6 +74,7 @@
   <!-- DAILY -->
   <section class="panel" role="tabpanel" id="p-daily" aria-labelledby="tab-daily" hidden>
     <div class="day-nav" id="day-nav"></div>
+    <div class="payback" id="payback" aria-live="polite" hidden></div>
     <section class="card tonight" id="tonight" aria-label="Where you're staying"></section>
     <div class="day-grid">
       <section class="card day-main" aria-label="Today's budget">
@@ -91,6 +92,10 @@
           </div>
           <div class="gbp-preview" id="log-gbp" aria-live="polite"></div>
           <fieldset class="kind-ctl" id="kind-ctl"><legend class="sr">What kind of spend</legend></fieldset>
+          <fieldset class="pay-ctl"><legend class="sr">Paid with</legend>
+            <input type="radio" name="log-pay" id="pay-card" value="card" checked><label for="pay-card">💳 Card</label>
+            <input type="radio" name="log-pay" id="pay-cash" value="cash"><label for="pay-cash">💵 Cash</label>
+          </fieldset>
           <label class="sr" for="log-note">Note</label>
           <input id="log-note" type="text" maxlength="120" placeholder="What was it? (optional)">
           <div class="log-actions">

@@ -212,6 +212,7 @@ function renderDaily(M){
   $("day-next")?.addEventListener("click",()=>{ SEL=days[Math.min(days.length-1,dayIdx+1)].date; renderDaily(M); });
   $("day-today")?.addEventListener("click",()=>{ SEL=T; renderDaily(M); });
   renderTonight(M, days, day, T);
+  renderPayback();
 
   const over = left < 0;
   $("day-hero").innerHTML = `
@@ -228,7 +229,7 @@ function renderDaily(M){
 
   // entries for the day
   $("day-entries").innerHTML = act.entries.length ? act.entries.sort((a,b)=>(a.ts||"").localeCompare(b.ts||"")).map(e=>`
-    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="kem" aria-hidden="true">${KIND[kindOf(e)].e}</span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||KIND[kindOf(e)].label)}">${esc(e.note||KIND[kindOf(e)].label)}<small>${KIND[kindOf(e)].label}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
+    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="kem" aria-hidden="true">${KIND[kindOf(e)].e}</span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||KIND[kindOf(e)].label)}">${esc(e.note||KIND[kindOf(e)].label)}<small>${KIND[kindOf(e)].label}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.pay==="cash"?" · 💵 cash":""}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
     : `<li class="note">Nothing logged for this day yet.</li>`;
 
   // form defaults (left alone while an entry is being edited)
@@ -330,6 +331,7 @@ $("log-form").addEventListener("submit", e=>{
   const amount = parseFloat($("log-amt").value), currency=$("log-cur").value, date=$("log-date").value;
   const kind = (document.querySelector('input[name="log-kind"]:checked')||{}).value || "meals";
   const cat = KIND[kind].cat;
+  const pay = (document.querySelector('input[name="log-pay"]:checked')||{}).value || "card";
   if (!(amount>0)) { $("log-msg").textContent = "Enter an amount above zero."; $("log-amt").focus(); return; }
   if (!date) { $("log-msg").textContent = "Pick a date."; return; }
   const note = $("log-note").value.trim().slice(0,120);
@@ -338,13 +340,13 @@ $("log-form").addEventListener("submit", e=>{
   const r = sameMoney ? EDITING.rate : rate(currency);
   const gbpVal = sameMoney ? EDITING.gbp : Math.round(amount/r*100)/100;
   if (EDITING) {
-    const entry = {...EDITING, date, cat, kind, amount, currency, gbp:gbpVal, rate:r, note, edited:new Date().toISOString()};
+    const entry = {...EDITING, date, cat, kind, pay, amount, currency, gbp:gbpVal, rate:r, note, edited:new Date().toISOString()};
     delete entry.pending;
     queueOp({op:"edit", entry});
     $("log-msg").textContent = `Updated to ${gbp(entry.gbp,2)} · ${KIND[kind].e} ${KIND[kind].chip.toLowerCase()}.`;
     stopEditing();
   } else {
-    const entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, cat, kind, amount, currency,
+    const entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, cat, kind, pay, amount, currency,
       gbp:gbpVal, rate:r, note, ts:new Date().toISOString()};
     queueOp({op:"add", entry});
     $("log-msg").textContent = `Added ${gbp(entry.gbp,2)} · ${KIND[kind].e} ${KIND[kind].chip.toLowerCase()}.`;
@@ -361,6 +363,7 @@ function startEditing(id){
   if (![...curSel.options].some(o=>o.value===e.currency)) curSel.insertAdjacentHTML("beforeend",`<option value="${esc(e.currency)}">${esc(e.currency)}</option>`);
   curSel.value = e.currency; $("log-amt").value = e.amount; $("log-note").value = e.note||""; $("log-date").value = e.date;
   const r=$("kind-"+kindOf(e)); if(r) r.checked = true;
+  $(e.pay==="cash"?"pay-cash":"pay-card").checked = true;
   $("log-submit").textContent = "Save changes"; $("log-cancel").hidden = false;
   $("h-log").textContent = "Edit spend"; $("log-msg").textContent = "";
   updateLogPreview(); rerender();
@@ -496,6 +499,51 @@ let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if
 addEventListener("online", ()=>{ if (PENDING.length) syncLog(); });
 
 // ---------- stays
+// ---------- credit card pay-back reminder (card spends only; "paid back" is remembered on this device)
+const PAYBACK_HOUR = 18;
+const paidBack = () => ls.get("sabbatical-paidback", {});
+function cardDay(date){
+  const es = logEntries().filter(e=>e.date===date && e.pay!=="cash");
+  const byCur = {}; es.forEach(e=>byCur[e.currency]=(byCur[e.currency]||0)+e.amount);
+  return {n:es.length, gbp:Math.round(sum(es,e=>e.gbp)*100)/100, local:Object.entries(byCur).map(([c,a])=>fmtLocal(a,c)).join(" + ")};
+}
+function renderPayback(){
+  const el = $("payback"); if (!el || !SEL) return;
+  const T = isoToday(), P = paidBack(), c = cardDay(SEL);
+  const owed = Math.max(0, Math.round((c.gbp-(P[SEL]||0))*100)/100);
+  const evening = SEL<T || (SEL===T && new Date().getHours()>=PAYBACK_HOUR);
+  // earlier days with card spends not yet marked as paid back
+  const earlier = SEL===T ? [...new Set(logEntries().filter(e=>e.date<T && e.pay!=="cash").map(e=>e.date))]
+    .map(d=>({d, o:Math.max(0, cardDay(d).gbp-(P[d]||0))})).filter(x=>x.o>0.004) : [];
+  const earlierT = sum(earlier,x=>x.o);
+  const dayWord = SEL===T ? "today" : SEL===addD(T,-1) ? "yesterday" : "on "+fmtD(SEL,{weekday:"short",day:"numeric",month:"short"});
+  let html = "", cls = "payback";
+  if (!c.n && !earlierT) { el.hidden = true; return; }
+  if (!evening) {
+    if (!c.n) { el.hidden = true; return; }
+    html = `<span class="pb-ico" aria-hidden="true">💳</span><div><b>${gbp(c.gbp,2)} on your card so far today</b><small>${c.local} · reminder to pay it back at ${PAYBACK_HOUR}:00</small></div>`;
+    cls += " quiet";
+  } else if (owed>0.004) {
+    html = `<span class="pb-ico" aria-hidden="true">💳</span><div><b>Pay back ${gbp(owed,2)} to your credit card</b><small>${c.n} card spend${c.n>1?"s":""} ${dayWord}${c.local?` · ${c.local}`:""}${P[SEL]?` · ${gbp(P[SEL],2)} already paid`:""} · cash not included · roughly, your card's rate may differ</small></div>
+      <button type="button" class="btn" data-paid="${SEL}">Mark as paid</button>`;
+    cls += " due";
+  } else if (c.n) {
+    html = `<span class="pb-ico" aria-hidden="true">✅</span><div><b>Paid back ${gbp(c.gbp,2)} for ${dayWord}</b><small>${c.local}</small></div><button type="button" class="linkbtn" data-unpaid="${SEL}">Undo</button>`;
+    cls += " done";
+  }
+  if (earlierT>0.004) html += `<div class="pb-earlier">Also ${gbp(earlierT,2)} from ${earlier.length} earlier day${earlier.length>1?"s":""} not marked as paid (${earlier.slice(-4).map(x=>fmtD(x.d)).join(", ")}${earlier.length>4?"…":""}) <button type="button" class="linkbtn sm" data-paid-all="1">Mark all as paid</button></div>`;
+  if (!html) { el.hidden = true; return; }
+  el.className = cls; el.innerHTML = html; el.hidden = false;
+}
+$("payback").addEventListener("click", e=>{
+  const P = paidBack();
+  const a = e.target.closest("[data-paid]"); if (a) { P[a.dataset.paid] = cardDay(a.dataset.paid).gbp; }
+  const u = e.target.closest("[data-unpaid]"); if (u) { delete P[u.dataset.unpaid]; }
+  if (e.target.closest("[data-paid-all]")) { const T=isoToday(); new Set(logEntries().filter(x=>x.date<T && x.pay!=="cash").map(x=>x.date)).forEach(d=>P[d]=cardDay(d).gbp); }
+  if (a || u || e.target.closest("[data-paid-all]")) { ls.set("sabbatical-paidback", P); renderPayback(); }
+});
+setInterval(()=>{ if (MODEL && !$("p-daily").hidden) renderPayback(); }, 60000);
+
 // ---------- tonight card: where you sleep, how to get there, what's next
 function splitContact(txt){
   const s = String(txt||"");
