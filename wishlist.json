@@ -1,0 +1,45 @@
+{
+ "updated": "2026-10-21T00:00:00.000Z",
+ "items": [
+  {
+   "id": "w1",
+   "title": "Vietnam Suit",
+   "note": "",
+   "done": false,
+   "order": 1,
+   "added": "2026-10-21T00:00:00.000Z"
+  },
+  {
+   "id": "w2",
+   "title": "Apple AirPods 3",
+   "note": "",
+   "done": false,
+   "order": 2,
+   "added": "2026-10-21T00:00:00.000Z"
+  },
+  {
+   "id": "w3",
+   "title": "Vintage Watch Japan",
+   "note": "",
+   "done": false,
+   "order": 3,
+   "added": "2026-10-21T00:00:00.000Z"
+  },
+  {
+   "id": "w4",
+   "title": "Dress Shoes",
+   "note": "",
+   "done": false,
+   "order": 4,
+   "added": "2026-10-21T00:00:00.000Z"
+  },
+  {
+   "id": "w5",
+   "title": "Dress Pants",
+   "note": "",
+   "done": false,
+   "order": 5,
+   "added": "2026-10-21T00:00:00.000Z"
+  }
+ ]
+}

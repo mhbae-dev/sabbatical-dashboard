@@ -15,7 +15,7 @@ const now = new Date(); const today = new Date(now.getFullYear(),now.getMonth(),
 const $ = id => document.getElementById(id);
 
 // ---------- tabs
-const TABS = ["daily","spending","overview","stays","flights","budget"];
+const TABS = ["daily","spending","overview","stays","flights","budget","wishlist"];
 function showTab(t, focus){
   if (t==="food") t = "daily";
   if(!TABS.includes(t)) t = "daily";
@@ -24,6 +24,7 @@ function showTab(t, focus){
   currentTab = t; try{ localStorage.setItem("sabbatical-tab",t); }catch(e){} try{ history.replaceState(null,"","#"+t); }catch(e){}
   if (t==="daily" && MODEL) renderDaily(MODEL);
   if (t==="spending" && MODEL) renderSpending(MODEL);
+  if (t==="wishlist") renderWishlist();
 }
 document.querySelector(".tabs").addEventListener("click",e=>{ const b=e.target.closest(".tab"); if(b) showTab(b.dataset.tab); });
 document.querySelector(".tabs").addEventListener("keydown",e=>{
@@ -931,12 +932,114 @@ function openLocal(file){
 }
 $("file").addEventListener("change", e=>{ openLocal(e.target.files[0]); e.target.value=""; });
 document.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>$("file").click()));
-$("reload").addEventListener("click", ()=>{ viewingLocal=false; lastSig=null; fetchRepoCopy(true).then(refreshLog); });
+$("reload").addEventListener("click", ()=>{ viewingLocal=false; lastSig=null; fetchRepoCopy(true).then(refreshLog); syncWish(); });
 addEventListener("dragover", e=>{ e.preventDefault(); document.body.classList.add("dragging"); });
 addEventListener("dragleave", e=>{ if (e.target===document.documentElement || !e.relatedTarget) document.body.classList.remove("dragging"); });
 addEventListener("drop", e=>{ e.preventDefault(); document.body.classList.remove("dragging"); const f=[...(e.dataTransfer?.files||[])].find(f=>/\.xlsx$/i.test(f.name)); if(f) openLocal(f); });
 document.addEventListener("visibilitychange", ()=>{ if (!document.hidden) { fetchRepoCopy(false); refreshLog(); } });
 setInterval(()=>{ fetchRepoCopy(false); refreshLog(); }, POLL_MS);
+
+// ---------- wishlist (wishlist.json in the GitHub repo, saved with the same access code as the spend log)
+const WISH_PATH = "wishlist.json";
+let WISH = [], WISH_PENDING = ls.get("sabbatical-wish-pending", []), WISH_EDIT = null, wishSyncing = false, WISH_STATE = "";
+function wishApply(items, ops){
+  let out = items.slice();
+  ops.forEach(o=>{
+    if (o.op==="add" && !out.some(i=>i.id===o.item.id)) out.push(o.item);
+    if (o.op==="edit") out = out.map(i=>i.id===o.id ? {...i, ...o.patch} : i);
+    if (o.op==="del") out = out.filter(i=>i.id!==o.id);
+  });
+  return out;
+}
+const wishItems = () => wishApply(WISH, WISH_PENDING).sort((a,b)=>(a.order||0)-(b.order||0));
+function wishQueue(op){ WISH_PENDING.push(op); ls.set("sabbatical-wish-pending", WISH_PENDING); renderWishlist(); syncWish(); }
+async function wishGet(){
+  const {repo, token} = cfg();
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/${WISH_PATH}?t=${Date.now()}`, {headers:{Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json"}, cache:"no-store"});
+  if (res.status===404) return {items:[], sha:null};
+  if (res.status===401 || res.status===403) throw Object.assign(new Error("GitHub didn't accept the access code."),{auth:true});
+  if (!res.ok) throw new Error("GitHub returned "+res.status);
+  const j = await res.json(); let data={items:[]}; try{ data = JSON.parse(b64dec(j.content)); }catch(e){}
+  return {items:Array.isArray(data.items)?data.items:[], sha:j.sha};
+}
+async function wishPut(items, sha){
+  const {repo, token} = cfg();
+  const body = {message:`Update wishlist (${items.length} items)`, content:b64enc(JSON.stringify({updated:new Date().toISOString(), items}, null, 1)+"\n")};
+  if (sha) body.sha = sha;
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/${WISH_PATH}`, {method:"PUT", headers:{Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json","Content-Type":"application/json"}, body:JSON.stringify(body)});
+  if (res.status===409 || res.status===422) return null;
+  if (res.status===401 || res.status===403 || res.status===404) throw Object.assign(new Error("GitHub refused the save."),{auth:true});
+  if (!res.ok) throw new Error("GitHub returned "+res.status);
+  return true;
+}
+async function syncWish(){
+  const {repo, token} = cfg();
+  if (!token || !repo) {
+    try { const r = await fetch(WISH_PATH+"?t="+Date.now(), {cache:"no-store"}); if (r.ok) { const j = await r.json(); WISH = Array.isArray(j.items)?j.items:[]; } } catch(e){}
+    WISH_STATE = WISH_PENDING.length ? "Changes saved on this device only. Add your GitHub access code in Logging setup (Daily tab) to sync them." : "Viewing only. Add your GitHub access code in Logging setup (Daily tab) to edit from this device.";
+    renderWishlist(); return;
+  }
+  if (wishSyncing) return; wishSyncing = true; WISH_STATE = "Saving…"; renderWishlist();
+  try {
+    let done = false;
+    for (let attempt=0; attempt<3 && !done; attempt++){
+      const cur = await wishGet(); const ops = WISH_PENDING.slice();
+      if (!ops.length) { WISH = cur.items; done = true; break; }
+      const next = wishApply(cur.items, ops);
+      if (!(await wishPut(next, cur.sha))) continue;
+      WISH = next; WISH_PENDING = WISH_PENDING.slice(ops.length); ls.set("sabbatical-wish-pending", WISH_PENDING);
+      done = !WISH_PENDING.length;
+    }
+    if (!done) throw new Error("retry");
+    WISH_STATE = `Saved to GitHub · ${fmtStamp(Date.now())}`;
+  } catch(e){
+    WISH_STATE = e.auth ? "GitHub refused the save. Check the access code in Logging setup (Daily tab)." : `Couldn't reach GitHub – ${WISH_PENDING.length} change${WISH_PENDING.length===1?"":"s"} saved on this device and will sync when you're back online.`;
+  } finally { wishSyncing = false; renderWishlist(); }
+}
+function renderWishlist(){
+  const all = wishItems(), open = all.filter(i=>!i.done), got = all.filter(i=>i.done);
+  const pend = new Set(WISH_PENDING.map(o=>o.id||o.item?.id));
+  const row = it => WISH_EDIT===it.id
+    ? `<li class="wl-item" data-id="${esc(it.id)}"><form class="wl-edit" data-wl-edit>
+        <input type="text" name="t" value="${esc(it.title)}" maxlength="120" aria-label="Item" required>
+        <input type="text" name="n" value="${esc(it.note||"")}" maxlength="200" placeholder="Note (optional)" aria-label="Note">
+        <button class="btn" type="submit">Save</button><button class="linkbtn" type="button" data-wl="cancel">Cancel</button></form></li>`
+    : `<li class="wl-item${it.done?" done":""}" data-id="${esc(it.id)}">
+        <input type="checkbox" data-wl="toggle" ${it.done?"checked":""} aria-label="Mark ${esc(it.title)} as got">
+        <div class="wl-body"><div class="wl-title">${esc(it.title)}</div>${it.note||pend.has(it.id)?`<div class="wl-note">${esc(it.note||"")}${pend.has(it.id)?`${it.note?" · ":""}waiting to sync`:""}</div>`:""}</div>
+        <button type="button" class="linkbtn" data-wl="edit">Edit</button>
+        <button type="button" class="del" data-wl="del" aria-label="Delete ${esc(it.title)}">×</button></li>`;
+  $("wl-list").innerHTML = open.length ? open.map(row).join("") : `<li class="note wl-empty">${got.length?"Everything on the list is ticked off.":"Nothing on the list yet. Add the first thing above."}</li>`;
+  $("wl-got").innerHTML = got.map(row).join("");
+  $("wl-got-wrap").hidden = !got.length; $("wl-got-h").textContent = `Got it · ${got.length}`;
+  $("wl-sum").textContent = all.length ? `${open.length} to get · ${got.length} got` : "";
+  $("wl-status").textContent = WISH_STATE;
+  if (WISH_EDIT) document.querySelector(`.wl-item[data-id="${CSS.escape(WISH_EDIT)}"] input[name=t]`)?.focus();
+}
+$("wl-form").addEventListener("submit", e=>{
+  e.preventDefault(); const t = $("wl-title").value.trim(); if (!t) { $("wl-title").focus(); return; }
+  const order = Math.max(0, ...wishItems().map(i=>i.order||0)) + 1;
+  wishQueue({op:"add", item:{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), title:t.slice(0,120), note:$("wl-note").value.trim().slice(0,200), done:false, order, added:new Date().toISOString()}});
+  $("wl-title").value = ""; $("wl-note").value = ""; $("wl-title").focus();
+});
+$("p-wishlist").addEventListener("click", e=>{
+  const b = e.target.closest("[data-wl]"); if (!b) return; const id = b.closest(".wl-item")?.dataset.id; if (!id) return;
+  const a = b.dataset.wl;
+  if (a==="edit") { WISH_EDIT = id; renderWishlist(); }
+  else if (a==="cancel") { WISH_EDIT = null; renderWishlist(); }
+  else if (a==="toggle") wishQueue({op:"edit", id, patch:{done:b.checked}});
+  else if (a==="del") {
+    if (!b.classList.contains("confirm")) { b.classList.add("confirm"); b.textContent = "Delete?"; setTimeout(()=>{ if (b.isConnected){ b.classList.remove("confirm"); b.textContent = "×"; } }, 3000); return; }
+    if (WISH_EDIT===id) WISH_EDIT = null; wishQueue({op:"del", id});
+  }
+});
+$("p-wishlist").addEventListener("submit", e=>{
+  const f = e.target.closest("[data-wl-edit]"); if (!f) return; e.preventDefault();
+  const id = f.closest(".wl-item").dataset.id, t = f.t.value.trim(); if (!t) return;
+  WISH_EDIT = null; wishQueue({op:"edit", id, patch:{title:t.slice(0,120), note:f.n.value.trim().slice(0,200)}});
+});
+$("p-wishlist").addEventListener("keydown", e=>{ if (e.key==="Escape" && WISH_EDIT) { WISH_EDIT = null; renderWishlist(); } });
+addEventListener("online", ()=>{ if (WISH_PENDING.length) syncWish(); });
 
 // ---------- boot
 let currentTab = location.hash.replace("#","");
@@ -945,4 +1048,5 @@ if (!TABS.includes(currentTab)) { try{ currentTab = localStorage.getItem("sabbat
 if (currentTab==="food") currentTab="daily";
 showTab(currentTab);
 fetchRepoCopy(true).then(refreshLog);
+syncWish();
 })();

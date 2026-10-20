@@ -10,6 +10,7 @@ A static web page that reads `Sabbatical_Plan_and_Budget.xlsx` and shows it as a
 | `vendor/xlsx.full.min.js` | SheetJS 0.20.3, which reads .xlsx files in the browser (Apache 2.0) |
 | `Sabbatical_Plan_and_Budget.xlsx` | The spreadsheet itself. The copy in this repo is the master |
 | `spend-log.json` | Spends logged from the Daily tab |
+| `wishlist.json` | Items on the Wishlist tab (saved with the same GitHub access code) |
 | `.github/workflows/sync-tracker.yml`, `scripts/sync_tracker.py` | Copies logged spends into the spreadsheet's Tracker sheet (see below) |
 | `update.sh` | Pulls the latest spreadsheet and spend log to your Mac as a backup |
 

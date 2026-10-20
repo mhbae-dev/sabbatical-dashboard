@@ -53,6 +53,7 @@
     <button class="tab" role="tab" id="tab-stays" aria-controls="p-stays" data-tab="stays">Stays</button>
     <button class="tab" role="tab" id="tab-flights" aria-controls="p-flights" data-tab="flights">Flights</button>
     <button class="tab" role="tab" id="tab-budget" aria-controls="p-budget" data-tab="budget">Budget</button>
+    <button class="tab" role="tab" id="tab-wishlist" aria-controls="p-wishlist" data-tab="wishlist">Wishlist</button>
   </nav>
 
   <!-- OVERVIEW -->
@@ -211,6 +212,21 @@
         <div class="tbl-wrap"><table id="spend"></table></div>
       </section>
     </div>
+  </section>
+
+  <!-- WISHLIST -->
+  <section class="panel" role="tabpanel" id="p-wishlist" aria-labelledby="tab-wishlist" hidden>
+    <section class="card" aria-labelledby="h-wish">
+      <div class="card-head"><h2 id="h-wish">Wishlist</h2><span class="sub" id="wl-sum"></span></div>
+      <form class="wl-add" id="wl-form" autocomplete="off">
+        <input type="text" id="wl-title" placeholder="Add something to buy…" aria-label="Item" maxlength="120">
+        <input type="text" id="wl-note" placeholder="Note – where, budget… (optional)" aria-label="Note" maxlength="200">
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <div class="sync-status wl-status" id="wl-status" role="status"></div>
+      <ul class="wl-list" id="wl-list"></ul>
+      <div id="wl-got-wrap" hidden><div class="eyebrow wl-sec" id="wl-got-h">Got it</div><ul class="wl-list" id="wl-got"></ul></div>
+    </section>
   </section>
 
   </div>
