@@ -211,6 +211,7 @@ function renderDaily(M){
   $("day-prev")?.addEventListener("click",()=>{ SEL=days[Math.max(0,dayIdx-1)].date; renderDaily(M); });
   $("day-next")?.addEventListener("click",()=>{ SEL=days[Math.min(days.length-1,dayIdx+1)].date; renderDaily(M); });
   $("day-today")?.addEventListener("click",()=>{ SEL=T; renderDaily(M); });
+  renderTonight(M, days, day, T);
 
   const over = left < 0;
   $("day-hero").innerHTML = `
@@ -495,6 +496,64 @@ let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if
 addEventListener("online", ()=>{ if (PENDING.length) syncLog(); });
 
 // ---------- stays
+// ---------- tonight card: where you sleep, how to get there, what's next
+function splitContact(txt){
+  const s = String(txt||"");
+  const phones = [...s.matchAll(/\+?\d[\d\s()-]{6,}\d/g)].map(m=>m[0].trim());
+  let addr = s; phones.forEach(p=>addr=addr.replace(p,""));
+  addr = addr.replace(/\b(tel|phone|ph)\b\.?:?/gi,"").replace(/[·|;,\s]+$/,"").replace(/^[·|;,\s]+/,"").trim();
+  return {addr, phones};
+}
+const whenRel = (iso, T) => { const n = Math.round((D(iso)-D(T))/864e5); return n===0?"today":n===1?"tomorrow":n===-1?"yesterday":n>0?`in ${n} days`:`${-n} days ago`; };
+function renderTonight(M, days, day, T){
+  const s = day.stop, h = s.hotel||{}, el = $("tonight");
+  const checkout = addD(s.start, s.nights), isToday = day.date===T;
+  const name = h.name || short(s.where);
+  const {addr, phones} = splitContact(h.contact);
+  const chip = s.cls==="booked" ? '<span class="chip booked">Booked</span>' : s.cls==="host" ? '<span class="chip host">With friends</span>' : `<span class="chip urgent">${esc(s.st)}</span>`;
+  const outTxt = checkout===addD(day.date,1) ? `<b>Check out tomorrow</b> · ${fmtD(checkout,{weekday:"short",day:"numeric",month:"short"})}` : `Check out ${fmtD(checkout,{weekday:"short",day:"numeric",month:"short"})} · ${s.nights-day.i-1} more night${s.nights-day.i-1===1?"":"s"} after this`;
+  const facts = [];
+  if (addr) facts.push(`<div class="tfact"><span class="ti" aria-hidden="true">📍</span><div><div class="addr">${esc(addr)}</div>
+      <div class="tbtns"><button type="button" class="linkbtn" data-taxi="${esc(addr)}">🚕 Show driver</button><a class="linkbtn" href="https://maps.apple.com/?q=${encodeURIComponent(addr)}" target="_blank" rel="noopener">🗺️ Maps</a><button type="button" class="linkbtn" data-copy="${esc(addr)}">Copy</button></div></div></div>`);
+  else if (s.cls==="booked") facts.push(`<div class="tfact muted"><span class="ti" aria-hidden="true">📍</span><div>No address yet. Add it on the Hotels tab under <b>Address / contact</b> (column M), with the local-script version for taxi drivers.</div></div>`);
+  phones.forEach(p=>facts.push(`<div class="tfact"><span class="ti" aria-hidden="true">📞</span><div><a href="tel:${esc(p.replace(/[^\d+]/g,""))}">${esc(p)}</a></div></div>`));
+  if (h.ref) facts.push(`<div class="tfact"><span class="ti" aria-hidden="true">🔖</span><div>Booking ref <b class="mono">${esc(h.ref)}</b> <button type="button" class="linkbtn sm" data-copy="${esc(h.ref)}">Copy</button></div></div>`);
+  if (h.payment && !/^n\/?a$/i.test(h.payment)) facts.push(`<div class="tfact"><span class="ti" aria-hidden="true">💳</span><div>${esc(h.payment)}</div></div>`);
+  if (h.cancel && checkout>T) facts.push(`<div class="tfact"><span class="ti" aria-hidden="true">↩️</span><div>Free cancellation until ${esc(h.cancel)}</div></div>`);
+  if (h.notes) facts.push(`<div class="tfact"><span class="ti" aria-hidden="true">📝</span><div>${esc(h.notes)}</div></div>`);
+  if (s.cls==="todo") facts.unshift(`<div class="tfact warn"><span class="ti" aria-hidden="true">⚠️</span><div><b>Not booked yet.</b> Budget is ${gbp(s.accN,0)} a night${s.note?` · ${esc(s.note)}`:""}</div></div>`);
+
+  // coming up: next flight, next stay, first stay still to book
+  const up = [];
+  const nf = M.flights.filter(f=>f.date && f.date>=day.date && !(f.date===day.date && !isToday)).sort((a,b)=>(a.date+(a.dep||"")).localeCompare(b.date+(b.dep||"")))[0];
+  if (nf) up.push(`<li><span class="ti" aria-hidden="true">✈️</span><div><b>${esc(code(nf.from)||nf.from)} → ${esc(code(nf.to)||nf.to)}</b> ${whenRel(nf.date,T)==="today"||whenRel(nf.date,T)==="tomorrow"?`<span class="chip urgent">${whenRel(nf.date,T)}</span>`:`<span class="rel">${whenRel(nf.date,T)}</span>`}
+      <small>${fmtD(nf.date,{weekday:"short",day:"numeric",month:"short"})}${nf.dep?` · ${esc(nf.dep)}${nf.arr?` → ${esc(nf.arr)}`:""}`:""}${nf.flight?` · ${esc(nf.flight)}`:""}${nf.booked?"":` · <span class="neg">to book${nf.by&&nf.by!=="Done"?`, ${esc(nf.by)}`:""}</span>`}</small></div></li>`);
+  const idx = M.stops.indexOf(s), next = M.stops[idx+1];
+  if (next) up.push(`<li><span class="ti" aria-hidden="true">🏨</span><div><b>${esc(next.hotel?.name && next.cls==="booked" ? next.hotel.name : short(next.where))}</b> <span class="rel">${whenRel(next.start,T)}</span>
+      <small>${esc(short(next.where))}, ${esc(next.country)} · from ${fmtD(next.start,{weekday:"short",day:"numeric",month:"short"})} · ${next.nights} night${next.nights>1?"s":""} · ${next.cls==="booked"?"booked":next.cls==="host"?"with friends":'<span class="neg">to book</span>'}</small></div></li>`);
+  const todo = M.stops.slice(idx+2).find(x=>x.cls==="todo");
+  if (todo && next?.cls!=="todo") up.push(`<li><span class="ti" aria-hidden="true">📌</span><div><b>Next stay to book: ${esc(short(todo.where))}</b> <span class="rel">${whenRel(todo.start,T)}</span>
+      <small>From ${fmtD(todo.start,{day:"numeric",month:"short"})} · ${todo.nights} nights · budget ${gbp(todo.accN,0)}/night</small></div></li>`);
+
+  el.innerHTML = `<div class="t-main">
+      <div class="eyebrow">🛏️ ${isToday?"Tonight":day.date===addD(T,1)?"Tomorrow night":"Night of "+fmtD(day.date,{weekday:"short",day:"numeric",month:"short"})}</div>
+      <h2 class="t-name">${esc(name)}</h2>
+      <div class="t-sub">${esc(short(s.where))}, ${esc(s.country)} · night ${day.i+1} of ${s.nights} ${chip}</div>
+      <div class="t-out">🧳 ${outTxt}</div>
+      <div class="tfacts">${facts.join("")}</div>
+    </div>
+    <div class="t-next"><div class="eyebrow">Coming up</div><ul>${up.join("") || '<li class="note">Nothing else on the plan. Home time!</li>'}</ul></div>`;
+}
+$("tonight").addEventListener("click", async e=>{
+  const c = e.target.closest("[data-copy]");
+  if (c) { try { await navigator.clipboard.writeText(c.dataset.copy); const t=c.textContent; c.textContent="Copied ✓"; setTimeout(()=>c.textContent=t,1500); } catch(_){} return; }
+  const t = e.target.closest("[data-taxi]");
+  if (t) { $("taxi-text").textContent = t.dataset.taxi; $("taxi").hidden = false; $("taxi-close").focus(); }
+});
+document.body.insertAdjacentHTML("beforeend", `<div class="taxi" id="taxi" role="dialog" aria-modal="true" aria-label="Address for the driver" hidden><div class="taxi-text" id="taxi-text"></div><button type="button" class="btn" id="taxi-close">Close</button></div>`);
+$("taxi").addEventListener("click", e=>{ if (e.target.id==="taxi" || e.target.id==="taxi-close") $("taxi").hidden = true; });
+document.addEventListener("keydown", e=>{ if (e.key==="Escape") $("taxi").hidden = true; });
+
 // ---------- spending tab: where the day-to-day money goes (log entries only, no hotels or flights)
 let SP_FOCUS = null, SP_GRAN = "day";
 function renderSpending(M){
