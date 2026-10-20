@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-20T00:09:45.939Z",
+ "updated": "2026-10-20T03:48:22.049Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -55,6 +55,18 @@
    "rate": 1,
    "note": "",
    "ts": "2026-10-20T00:05:17.248Z"
+  },
+  {
+   "id": "mvg586qrpc9q",
+   "date": "2026-10-20",
+   "cat": "transport",
+   "kind": "transport",
+   "amount": 5.9,
+   "currency": "GBP",
+   "gbp": 5.9,
+   "rate": 1,
+   "note": "TMoney",
+   "ts": "2026-10-20T03:48:21.411Z"
   }
  ]
 }
