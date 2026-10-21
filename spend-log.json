@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T07:14:14.700Z",
+ "updated": "2026-10-21T07:14:18.185Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -199,6 +199,14 @@
    "what": "Save marathon confirmation; check expo / bib pickup dates + ID",
    "date": "2026-10-21",
    "ts": "2026-10-21T07:14:13.962Z"
+  },
+  {
+   "id": "mvhs0vbc5sdg",
+   "cat": "taskDone",
+   "key": "todo:Visit Japan Web",
+   "what": "Visit Japan Web",
+   "date": "2026-10-21",
+   "ts": "2026-10-21T07:14:17.352Z"
   }
  ]
 }
