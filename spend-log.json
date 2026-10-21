@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T11:07:55.539Z",
+ "updated": "2026-10-21T12:54:44.866Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -228,6 +228,19 @@
    "rate": 1,
    "note": "KBBQ",
    "ts": "2026-10-21T11:07:54.450Z"
+  },
+  {
+   "id": "mvi46m3ysf73",
+   "date": "2026-10-21",
+   "cat": "shop",
+   "kind": "shopping",
+   "pay": "card",
+   "amount": 13.57,
+   "currency": "GBP",
+   "gbp": 13.57,
+   "rate": 1,
+   "note": "Olive Young",
+   "ts": "2026-10-21T12:54:40.750Z"
   }
  ]
 }
