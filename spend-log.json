@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T07:14:24.936Z",
+ "updated": "2026-10-21T11:07:55.539Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -215,6 +215,19 @@
    "what": "Confirm Johor friend dates (30 Nov–5 Dec)",
    "date": "2026-10-21",
    "ts": "2026-10-21T07:14:24.368Z"
+  },
+  {
+   "id": "mvi0daz6hy5w",
+   "date": "2026-10-21",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 36.63,
+   "currency": "GBP",
+   "gbp": 36.63,
+   "rate": 1,
+   "note": "KBBQ",
+   "ts": "2026-10-21T11:07:54.450Z"
   }
  ]
 }
