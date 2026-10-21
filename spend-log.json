@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T12:54:44.866Z",
+ "updated": "2026-10-21T12:55:22.376Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -235,12 +235,13 @@
    "cat": "shop",
    "kind": "shopping",
    "pay": "card",
-   "amount": 13.57,
+   "amount": 17.35,
    "currency": "GBP",
-   "gbp": 13.57,
+   "gbp": 17.35,
    "rate": 1,
    "note": "Olive Young",
-   "ts": "2026-10-21T12:54:40.750Z"
+   "ts": "2026-10-21T12:54:40.750Z",
+   "edited": "2026-10-21T12:55:21.355Z"
   }
  ]
 }
