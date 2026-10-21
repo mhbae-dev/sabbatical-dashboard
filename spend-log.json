@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T05:48:40.100Z",
+ "updated": "2026-10-21T05:49:35.912Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -167,6 +167,19 @@
    "rate": 1,
    "note": "",
    "ts": "2026-10-21T05:48:38.631Z"
+  },
+  {
+   "id": "mvhozxevm8t8",
+   "date": "2026-10-21",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 2.78,
+   "currency": "GBP",
+   "gbp": 2.78,
+   "rate": 1,
+   "note": "Waffle",
+   "ts": "2026-10-21T05:49:34.567Z"
   }
  ]
 }
