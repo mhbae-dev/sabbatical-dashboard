@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T07:14:05.826Z",
+ "updated": "2026-10-21T07:14:14.700Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -191,6 +191,14 @@
    "what": "Message Incheon hotel about late arrival (land 22:00)",
    "date": "2026-10-21",
    "ts": "2026-10-21T07:14:05.220Z"
+  },
+  {
+   "id": "mvhs0sp6xrb5",
+   "cat": "taskDone",
+   "key": "todo:Save marathon confirmation; check expo / bib pickup dates + ID",
+   "what": "Save marathon confirmation; check expo / bib pickup dates + ID",
+   "date": "2026-10-21",
+   "ts": "2026-10-21T07:14:13.962Z"
   }
  ]
 }
