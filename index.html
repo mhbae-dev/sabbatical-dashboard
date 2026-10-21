@@ -97,6 +97,11 @@
             <input type="radio" name="log-pay" id="pay-card" value="card" checked><label for="pay-card">💳 Card</label>
             <input type="radio" name="log-pay" id="pay-cash" value="cash"><label for="pay-cash">💵 Cash</label>
           </fieldset>
+          <fieldset class="pay-ctl fund-ctl" id="fund-ctl"><legend class="sr">Take it from</legend>
+            <input type="radio" name="log-fund" id="fund-day" value="day" checked><label for="fund-day">📅 This day</label>
+            <input type="radio" name="log-fund" id="fund-spread" value="spread"><label for="fund-spread">↔️ Spread over stay</label>
+            <input type="radio" name="log-fund" id="fund-treat" value="treat"><label for="fund-treat">🎁 Treat fund</label>
+          </fieldset>
           <label class="sr" for="log-note">Note</label>
           <input id="log-note" type="text" maxlength="120" placeholder="What was it? (optional)">
           <div class="log-actions">
@@ -112,7 +117,7 @@
     </div>
     <div class="food-top" id="trip-stats"></div>
     <section class="card" aria-labelledby="h-dchart">
-      <div class="card-head"><h2 id="h-dchart">Daily budget vs what you spent</h2><span class="sub">Line = daily budget · bars = logged spending · tap a day to open it</span></div>
+      <div class="card-head"><h2 id="h-dchart">Daily budget vs what you spent</h2><span class="sub">Green line = daily budget, after rolling over within each stay · dashed = original plan · bars = logged spending · tap a day to open it</span></div>
       <div id="daily-chart-wrap" style="min-width:0"></div>
     </section>
     <section class="card">

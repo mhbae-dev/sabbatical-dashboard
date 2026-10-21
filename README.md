@@ -54,6 +54,14 @@ Every spend type you pick when logging belongs to exactly one line on the Budget
 
 Hotel, Flight and Visa & admin spends count towards their Budget line and Committed, but don't come out of the day's "left to spend". It also shows how much of it is left. Add what you spend with **Log a spend**. Amounts in local currency are converted to £ with the rates under *Exchange rates*.
 
+### Rolling budget and treat fund
+
+- **Each stay is one pot.** A day's budget is what's left in the stay's pot divided by the nights left there, so spending less today raises the next days and overspending lowers them. It never drops below 60% of the planned day (`FLOOR` in app.js).
+- **Take it from** (when logging a day-to-day spend): *This day* (default); *Spread over stay*, which shares a one-off like a train ticket equally over the rest of that stay from its date; or *Treat fund*, which doesn't touch the day at all.
+- **Treat fund.** When a stay ends, whatever it finished under (or over) goes into the treat fund. Treat-fund spends come out of it. If it goes negative, the overspend comes out of contingency.
+- Days with nothing logged count as £0 spent, so log everything or the stay looks further under than it is.
+- These choices are saved as `fund: "spread" | "treat"` on the entry. The Tracker sheet and Budget tab still count every spend in full under its Budget line.
+
 Spends are saved to `spend-log.json` in this repository. They count towards *Committed* on the Overview and Budget tabs.
 
 ### Logged spends in the Tracker sheet

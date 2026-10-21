@@ -200,9 +200,12 @@ $("kind-ctl").insertAdjacentHTML("beforeend",
 $("kind-ctl").insertAdjacentHTML("afterend", `<div class="kind-hint" id="kind-hint" aria-live="polite"></div>`);
 function updateKindHint(){
   const k = (document.querySelector('input[name="log-kind"]:checked')||{}).value; const c = k && DCAT[KIND[k].cat];
-  $("kind-hint").innerHTML = c ? `Counts under <b>${esc(c.budgetCat)}</b> on the Budget tab${c.daily?" · comes out of today's budget":" · not from today's budget"}` : "";
+  const f = (document.querySelector('input[name="log-fund"]:checked')||{}).value || "day";
+  const fc = $("fund-ctl"); if (fc) { fc.disabled = !(c && c.daily); fc.classList.toggle("off", !(c && c.daily)); }
+  const how = !c ? "" : !c.daily ? " · not from today's budget" : f==="spread" ? " · shared equally over the rest of this stay" : f==="treat" ? " · paid from the treat fund, not today's budget" : " · comes out of this day's budget";
+  $("kind-hint").innerHTML = c ? `Counts under <b>${esc(c.budgetCat)}</b> on the Budget tab${how}` : "";
 }
-$("kind-ctl").addEventListener("change", updateKindHint); updateKindHint();
+$("kind-ctl").addEventListener("change", updateKindHint); $("fund-ctl").addEventListener("change", updateKindHint); updateKindHint();
 
 function tripDays(M){
   const days=[]; M.stops.forEach(s=>{ for(let i=0;i<s.nights;i++){
@@ -220,6 +223,51 @@ function dayActuals(date){
   return out;
 }
 
+// ---------- rolling daily budget + treat fund
+// Each stay is one pot. A day's budget = what's left in the stay's pot ÷ nights left there,
+// but never below FLOOR × the planned day. Spends marked "spread" are shared equally over the
+// rest of that stay; spends marked "treat" come out of the treat fund instead of the day.
+// When a stay has ended, whatever it finished under (or over) goes into the treat fund.
+const FLOOR = 0.6;
+const fundOf = e => e.fund==="spread"||e.fund==="treat" ? e.fund : "day";
+function budgetState(M, T){
+  T = T || isoToday();
+  const days = tripDays(M), idx = Object.fromEntries(days.map((d,i)=>[d.date,i]));
+  const D = Object.fromEntries(days.map(d=>[d.date,{spent:0, cats:{}, spreadIn:[], allow:d.total, base:d.total, floored:false, carry:0}]));
+  const treatSpends = [];
+  logEntries().filter(isDaily).forEach(e=>{
+    const f = fundOf(e), d = days[idx[e.date]];
+    if (f==="treat") { treatSpends.push(e); return; }
+    if (!d) return;
+    const add = (x, v) => { x.spent += v; x.cats[e.cat] = (x.cats[e.cat]||0) + v; };
+    if (f==="spread") {
+      const rest = days.filter(x=>x.stop===d.stop && x.date>=e.date), part = e.gbp/rest.length;
+      rest.forEach(x=>{ add(D[x.date], part); D[x.date].spreadIn.push({e, part, n:rest.length}); });
+    } else add(D[e.date], e.gbp);
+  });
+  const stops = M.stops.map(st=>{
+    const sd = days.filter(d=>d.stop===st); if (!sd.length) return null;
+    const pot = sum(sd,d=>d.total); let used = 0;
+    sd.forEach((d,i)=>{
+      const x = D[d.date], roll = (pot-used)/(sd.length-i), floor = FLOOR*d.total;
+      x.allow = Math.max(floor, roll); x.floored = roll < floor - 0.005; x.carry = x.allow - d.total;
+      // days still to come are assumed to use their budget (or what's already logged for them, if more)
+      used += d.date < T ? x.spent : Math.max(x.spent, x.allow);
+    });
+    const spent = sum(sd,d=>D[d.date].spent), end = addD(st.start, st.nights);
+    return {stop:st, days:sd, pot, spent, diff:pot-spent, done:end<=T, end};
+  }).filter(Boolean);
+  const doneStops = stops.filter(s=>s.done);
+  const fundIn = sum(doneStops,s=>s.diff), fundOut = sum(treatSpends,e=>e.gbp);
+  return {days:D, stops, doneStops, treatSpends, fundIn, fundOut, fund:fundIn-fundOut};
+}
+
+function fundTag(e, B){
+  const f = fundOf(e); if (!isDaily(e) || f==="day") return "";
+  if (f==="treat") return " · 🎁 treat fund";
+  const p = B.days[e.date]?.spreadIn.find(x=>x.e.id===e.id);
+  return p ? ` · ↔️ spread over ${p.n} days (${gbp(p.part,2)} a day)` : " · ↔️ spread";
+}
 function renderDaily(M){
   const days = tripDays(M);
   if (!days.length) return;
@@ -229,7 +277,8 @@ function renderDaily(M){
   SEL = SEL<first?first:SEL>last?last:SEL;
   const dayIdx = days.findIndex(d=>d.date===SEL), day = days[dayIdx], s = day.stop;
   const act = dayActuals(SEL);
-  const left = day.total - act.total;
+  const B = budgetState(M, T), bd = B.days[SEL];
+  const left = bd.allow - bd.spent;
   const relative = SEL===T ? "Today" : SEL===addD(T,-1) ? "Yesterday" : SEL===addD(T,1) ? "Tomorrow" : fmtD(SEL,{weekday:"long"});
 
   $("day-nav").innerHTML = `
@@ -248,20 +297,26 @@ function renderDaily(M){
     <div class="eyebrow">${over?"Over today's budget by":"Left to spend"}</div>
     <div class="big ${over?"neg":""}">${gbp(Math.abs(left),2)}</div>
     <div class="loc">${localOf(Math.abs(left), s) ? "≈ "+localOf(Math.abs(left), s) : ""}</div>
-    <div class="n">${gbp(day.total,2)} daily budget · ${gbp(act.total,2)} spent${s.meal?` · <span class="meal">${s.meal}</span>`:""}</div>`;
+    <div class="n">${gbp(bd.allow,2)} budget ${SEL===T?"today":"this day"} · ${gbp(bd.spent,2)} spent${s.meal?` · <span class="meal">${s.meal}</span>`:""}</div>
+    ${Math.abs(bd.carry)>=0.5 ? `<div class="n roll ${bd.carry<0?"neg":""}">Plan ${gbp(day.total,2)} ${bd.carry>0?"+":"−"} ${gbp(Math.abs(bd.carry),2)} ${bd.carry>0?"left over from earlier in this stay":"to make up for earlier in this stay"}${bd.floored?` · kept at the ${Math.round(FLOOR*100)}% minimum, the rest comes out of the treat fund at the end of the stay`:""}</div>` : ""}`;
   const outs = DCATS.filter(c=>!c.daily && act[c.k]);
+  const ratio = day.total>0 ? bd.allow/day.total : 1;
   $("day-cats").innerHTML = DAILY_CATS.map(c=>{
-    const a=day.allow[c.k], sp=act[c.k]||0, pct=a>0?Math.min(100,sp/a*100):(sp>0?100:0), o=sp>a+0.005;
+    const a=day.allow[c.k]*ratio, sp=bd.cats[c.k]||0, pct=a>0?Math.min(100,sp/a*100):(sp>0?100:0), o=sp>a+0.005;
     return `<div class="dcat"><div class="top"><span><i style="background:var(${c.c})"></i>${c.label}</span><span class="num"><b class="${o?"neg":""}">${gbp(sp,2)}</b> of ${gbp(a,2)}</span></div>
       <div class="meter"><div style="width:${pct}%;background:var(${o?"--crit":c.c})"></div></div>
       <div class="n">${o?`${gbp(sp-a,2)} over`:`${gbp(a-sp,2)} left`}${localOf(Math.max(0,a-sp),s)&&!o?` ≈ ${localOf(a-sp,s)}`:""}</div></div>`;
   }).join("");
   if (outs.length) $("day-cats").insertAdjacentHTML("beforeend", `<p class="note dcat-out">Also logged today, outside the daily budget: ${outs.map(c=>`<i style="background:var(${c.c})"></i>${c.label} ${gbp(act[c.k],2)}`).join(" · ")}</p>`);
+  const treatToday = act.entries.filter(e=>isDaily(e) && fundOf(e)==="treat");
+  if (treatToday.length) $("day-cats").insertAdjacentHTML("beforeend", `<p class="note dcat-out">🎁 From the treat fund: ${gbp(sum(treatToday,e=>e.gbp),2)} (not counted in this day's budget)</p>`);
 
   // entries for the day
   $("day-entries").innerHTML = act.entries.length ? act.entries.sort((a,b)=>(a.ts||"").localeCompare(b.ts||"")).map(e=>`
-    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="kem" aria-hidden="true">${KIND[kindOf(e)].e}</span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||KIND[kindOf(e)].label)}">${esc(e.note||KIND[kindOf(e)].label)}<small>${KIND[kindOf(e)].label}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.pay==="cash"?" · 💵 cash":""}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
+    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="kem" aria-hidden="true">${KIND[kindOf(e)].e}</span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||KIND[kindOf(e)].label)}">${esc(e.note||KIND[kindOf(e)].label)}<small>${KIND[kindOf(e)].label}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.pay==="cash"?" · 💵 cash":""}${fundTag(e,B)}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
     : `<li class="note">Nothing logged for this day yet.</li>`;
+  const spreadHere = bd.spreadIn.filter(p=>p.e.date!==SEL);
+  if (spreadHere.length) $("day-entries").insertAdjacentHTML("beforeend", spreadHere.map(p=>`<li class="spread-in"><span class="kem" aria-hidden="true">↔️</span><span class="what">${esc(p.e.note||KIND[kindOf(p.e)].label)}<small>Spread from ${fmtD(p.e.date,{weekday:"short",day:"numeric",month:"short"})} · ${gbp(p.e.gbp,2)} over ${p.n} days</small></span><span class="amt">${gbp(p.part,2)}</span><span></span></li>`).join(""));
 
   // form defaults (left alone while an entry is being edited)
   if (EDITING) { renderSyncStatusLater(); } else {
@@ -274,28 +329,28 @@ function renderDaily(M){
   }
   $("log-date").min = first; $("log-date").max = last;
 
-  // trip to date
+  // this stay, treat fund, trip to date
   const lastDone = T<first ? null : (T>last ? last : T);
   const doneDays = lastDone ? days.filter(d=>d.date<=lastDone) : [];
   const allowToDate = sum(doneDays,d=>d.total);
-  const actualToDate = sum(logEntries().filter(e=>isDaily(e) && lastDone && e.date<=lastDone),e=>e.gbp);
-  const totalDaily = sum(days,d=>d.total);
-  const remainingDays = days.filter(d=>d.date>=(lastDone?T:first)).length;
-  const spentBeforeToday = sum(logEntries().filter(e=>isDaily(e) && e.date<T),e=>e.gbp);
-  const allowBeforeToday = sum(days.filter(d=>d.date<T),d=>d.total);
-  const pace = remainingDays ? (totalDaily - spentBeforeToday)/remainingDays : 0;
-  const planPace = remainingDays ? sum(days.filter(d=>d.date>=T),d=>d.total)/remainingDays : 0;
+  const actualToDate = sum(doneDays,d=>B.days[d.date].spent);
   const diff = allowToDate - actualToDate;
+  const cur = B.stops.find(x=>x.stop===(days.find(d=>d.date===(T<first?first:T>last?last:T))||days[0]).stop);
+  const past = cur.days.filter(d=>d.date<T), ahead = cur.days.filter(d=>d.date>=T);
+  const curDiff = sum(past,d=>d.total-B.days[d.date].spent), curLeft = cur.pot - sum(past,d=>B.days[d.date].spent);
+  const fundNote = B.doneStops.length
+    ? B.doneStops.slice(-3).map(x=>`${esc(short(x.stop.where))} <b class="${x.diff<0?"neg":""}">${x.diff>=0?"+":"−"}${gbp(Math.abs(x.diff),0)}</b>`).join(" · ") + (B.doneStops.length>3?` · ${B.doneStops.length-3} more`:"") + (B.fundOut?` · ${gbp(B.fundOut,2)} spent from it`:"")
+    : `Fills up as each stay ends under budget${B.fundOut?` · ${gbp(B.fundOut,2)} spent from it so far`:""}`;
   $("trip-stats").innerHTML = `
+    <div class="fstat"><div class="eyebrow">${esc(short(cur.stop.where))} so far</div>
+      <div class="v ${curDiff<0?"neg":""}">${past.length ? (curDiff>=0?gbp(curDiff,0)+"<small> under</small>":gbp(-curDiff,0)+"<small> over</small>") : gbp(cur.pot,0)+"<small> for the stay</small>"}</div>
+      <div class="n">${ahead.length ? `${gbp(curLeft,0)} left for ${ahead.length} day${ahead.length>1?"s":""} · ${gbp(Math.max(0,curLeft)/ahead.length,2)} a day` : `Stay finished`} · plan ${gbp(cur.days[0].total,2)} a day</div></div>
+    <div class="fstat hero"><div class="eyebrow">🎁 Treat fund</div>
+      <div class="v ${B.fund<0?"neg":""}">${B.fund<0?"−":""}${gbp(Math.abs(B.fund),2)}</div>
+      <div class="n">${fundNote}${B.fund<0?" · overspend comes out of contingency":""}</div></div>
     <div class="fstat"><div class="eyebrow">Trip so far</div>
       <div class="v ${diff<0?"neg":""}">${doneDays.length? (diff>=0?gbp(diff,0)+"<small> under</small>":gbp(-diff,0)+"<small> over</small>") : "–"}</div>
-      <div class="n">${doneDays.length?`${gbp(actualToDate,0)} spent of ${gbp(allowToDate,0)} over ${doneDays.length} day${doneDays.length>1?"s":""}`:"Starts "+fmtD(first)}</div></div>
-    <div class="fstat"><div class="eyebrow">To stay on budget</div>
-      <div class="v">${gbp(pace,2)}<small> / day</small></div>
-      <div class="n">for the ${remainingDays} days ${T<=first?"of the trip":"left"} · plan averages ${gbp(planPace,2)}</div></div>
-    <div class="fstat"><div class="eyebrow">Daily budget, whole trip</div>
-      <div class="v">${gbp(totalDaily,0)}</div>
-      <div class="n">${gbp(totalDaily/days.length,2)} a day on average · accommodation not included</div></div>`;
+      <div class="n">${doneDays.length?`${gbp(actualToDate,0)} spent of ${gbp(allowToDate,0)} planned over ${doneDays.length} day${doneDays.length>1?"s":""} · treat-fund spends not included`:"Starts "+fmtD(first)}</div></div>`;
 
   renderDailyChart(M, days, T);
 
@@ -306,11 +361,11 @@ function renderDaily(M){
     g.stops.forEach(st=>{
       const sd = days.filter(d=>d.stop===st), pd = sd[0]?.total||0;
       const logged = sd.filter(d=>d.date<=T && d.date>=first && T>=first);
-      const actAvg = logged.length ? sum(logged,d=>dayActuals(d.date).total)/logged.length : null;
+      const actAvg = logged.length ? sum(logged,d=>B.days[d.date].spent)/logged.length : null;
       t += `<tr${st===s?' class="cur"':""}><td>${esc(short(st.where))}${st.meal?`<span class="meal">${st.meal}</span>`:""}</td><td class="nw">${fmtD(st.start)} – ${fmtD(addD(st.start,st.nights))}</td><td class="r">${gbp(st.foodD,2)}</td><td class="r">${gbp(st.trans/st.nights,2)}</td><td class="r">${gbp(st.act/st.nights,2)}</td><td class="r">${gbp(st.misc/st.nights,2)}</td><td class="r fd">${gbp(pd,2)}</td><td class="r mono">${localOf(pd,st)}</td><td class="r ${actAvg!=null&&actAvg>pd?"neg":""}">${actAvg==null?"–":gbp(actAvg,2)}</td></tr>`;
     });
   });
-  t += `<tr class="total"><td>Whole trip</td><td></td><td class="r">${gbp(M.planned.Food)}</td><td class="r">${gbp(M.planned["Local transport"])}</td><td class="r">${gbp(M.planned.Activities)}</td><td class="r">${gbp(M.planned["Shopping & misc"])}</td><td class="r">${gbp(totalDaily/days.length,2)} avg</td><td></td><td></td></tr></tbody>`;
+  t += `<tr class="total"><td>Whole trip</td><td></td><td class="r">${gbp(M.planned.Food)}</td><td class="r">${gbp(M.planned["Local transport"])}</td><td class="r">${gbp(M.planned.Activities)}</td><td class="r">${gbp(M.planned["Shopping & misc"])}</td><td class="r">${gbp(sum(days,d=>d.total)/days.length,2)} avg</td><td></td><td></td></tr></tbody>`;
   $("daily-table").innerHTML = t;
   renderSyncStatus();
 }
@@ -319,22 +374,24 @@ function renderDailyChart(M, days, T){
   const wrap = $("daily-chart-wrap");
   const W = Math.max(320, wrap.clientWidth||900), H = 240, m = {l:40,r:12,t:24,b:40};
   const n = days.length, iw=W-m.l-m.r, ih=H-m.t-m.b;
-  const actuals = days.map(d=>dayActuals(d.date).total);
-  const hi = Math.max(...days.map(d=>d.total), ...actuals, 10);
+  const B = budgetState(M, T), allow = days.map(d=>B.days[d.date].allow);
+  const actuals = days.map(d=>B.days[d.date].spent);
+  const hi = Math.max(...allow, ...actuals, 10);
   const yMax = Math.ceil(hi*1.1/20)*20;
   const X = i => m.l + i/n*iw, Y = v => m.t + ih - v/yMax*ih, bw = iw/n;
   let g = `<svg class="fchart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily budget and actual spending across the trip">`;
   const step = yMax<=60?10:yMax<=150?25:50;
   for (let v=0; v<=yMax; v+=step) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${m.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">£${v}</text>`;
   // actual bars
-  days.forEach((d,i)=>{ const a=actuals[i]; if(!a) return; const over=a>d.total+0.005;
+  days.forEach((d,i)=>{ const a=actuals[i]; if(!a) return; const over=a>allow[i]+0.005;
     g += `<rect x="${X(i)+bw*0.15}" y="${Y(a)}" width="${Math.max(1,bw*0.7)}" height="${Y(0)-Y(a)}" rx="1.5" fill="var(${over?"--crit":"--c1"})" fill-opacity="${over?.85:.75}"/>`; });
   // budget step line
-  let line=""; days.forEach((d,i)=>{ const y=Y(d.total); line += (i?` L${X(i)},${y}`:`M${X(i)},${y}`)+` L${X(i+1)},${y}`; });
-  g += `<path d="${line}" fill="none" stroke="var(--c3)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  const step2 = f => { let p=""; days.forEach((d,i)=>{ const y=Y(f(d,i)); p += (i?` L${X(i)},${y}`:`M${X(i)},${y}`)+` L${X(i+1)},${y}`; }); return p; };
+  g += `<path d="${step2(d=>d.total)}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linejoin="round"/>`;
+  g += `<path d="${step2((d,i)=>allow[i])}" fill="none" stroke="var(--c3)" stroke-width="2.5" stroke-linejoin="round"/>`;
   // hit areas
   days.forEach((d,i)=>{ const a=actuals[i];
-    const tip = `<b>${fmtD(d.date,{weekday:"short",day:"numeric",month:"short"})}</b>${esc(short(d.stop.where))} · budget ${gbp(d.total,2)}<br>${a?`Spent ${gbp(a,2)} (${a>d.total?gbp(a-d.total,2)+" over":gbp(d.total-a,2)+" under"})`:"Nothing logged"}`;
+    const tip = `<b>${fmtD(d.date,{weekday:"short",day:"numeric",month:"short"})}</b>${esc(short(d.stop.where))} · budget ${gbp(allow[i],2)}${Math.abs(allow[i]-d.total)>=0.5?` (plan ${gbp(d.total,2)})`:""}<br>${a?`Spent ${gbp(a,2)} (${a>allow[i]?gbp(a-allow[i],2)+" over":gbp(allow[i]-a,2)+" under"})`:"Nothing logged"}`;
     g += `<rect class="hit" x="${X(i)}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent" data-tip="${esc(tip)}" data-day="${d.date}" style="cursor:pointer"/>`; });
   // country bands
   let a2=0; M.groups.forEach(gr=>{ const x0=X(a2)+1, x1=X(a2+gr.nights)-1; a2+=gr.nights;
@@ -363,6 +420,7 @@ $("log-form").addEventListener("submit", e=>{
   const kind = (document.querySelector('input[name="log-kind"]:checked')||{}).value || "meals";
   const cat = KIND[kind].cat;
   const pay = (document.querySelector('input[name="log-pay"]:checked')||{}).value || "card";
+  const fund = DCAT[cat].daily ? ((document.querySelector('input[name="log-fund"]:checked')||{}).value || "day") : "day";
   if (!(amount>0)) { $("log-msg").textContent = "Enter an amount above zero."; $("log-amt").focus(); return; }
   if (!date) { $("log-msg").textContent = "Pick a date."; return; }
   const note = $("log-note").value.trim().slice(0,120);
@@ -372,17 +430,18 @@ $("log-form").addEventListener("submit", e=>{
   const gbpVal = sameMoney ? EDITING.gbp : Math.round(amount/r*100)/100;
   if (EDITING) {
     const entry = {...EDITING, date, cat, kind, pay, amount, currency, gbp:gbpVal, rate:r, note, edited:new Date().toISOString()};
-    delete entry.pending;
+    delete entry.pending; if (fund==="day") delete entry.fund; else entry.fund = fund;
     queueOp({op:"edit", entry});
     $("log-msg").textContent = `Updated to ${gbp(entry.gbp,2)} · ${KIND[kind].e} ${KIND[kind].chip.toLowerCase()}.`;
     stopEditing();
   } else {
     const entry = {id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date, cat, kind, pay, amount, currency,
       gbp:gbpVal, rate:r, note, ts:new Date().toISOString()};
+    if (fund!=="day") entry.fund = fund;
     queueOp({op:"add", entry});
     $("log-msg").textContent = `Added ${gbp(entry.gbp,2)} · ${KIND[kind].e} ${KIND[kind].chip.toLowerCase()}.`;
   }
-  $("log-amt").value=""; $("log-note").value=""; updateLogPreview();
+  $("log-amt").value=""; $("log-note").value=""; $("fund-day").checked = true; updateKindHint(); updateLogPreview();
   SEL = date; rerender();
 });
 let EDITING = null;
@@ -395,6 +454,7 @@ function startEditing(id){
   curSel.value = e.currency; $("log-amt").value = e.amount; $("log-note").value = e.note||""; $("log-date").value = e.date;
   const r=$("kind-"+kindOf(e)); if(r) r.checked = true; updateKindHint();
   $(e.pay==="cash"?"pay-cash":"pay-card").checked = true;
+  $("fund-"+fundOf(e)).checked = true; updateKindHint();
   $("log-submit").textContent = "Save changes"; $("log-cancel").hidden = false;
   $("h-log").textContent = "Edit spend"; $("log-msg").textContent = "";
   updateLogPreview(); rerender();
@@ -403,7 +463,7 @@ function startEditing(id){
 function stopEditing(){
   EDITING = null; $("log-submit").textContent = "Add"; $("log-cancel").hidden = true; $("h-log").textContent = "Log a spend";
 }
-$("log-cancel").addEventListener("click", ()=>{ stopEditing(); $("log-amt").value=""; $("log-note").value=""; $("log-msg").textContent=""; rerender(); });
+$("log-cancel").addEventListener("click", ()=>{ stopEditing(); $("log-amt").value=""; $("log-note").value=""; $("fund-day").checked = true; updateKindHint(); $("log-msg").textContent=""; rerender(); });
 $("day-entries").addEventListener("click", e=>{
   const ed=e.target.closest("[data-edit]"); if(ed){ startEditing(ed.dataset.edit); return; }
   const b=e.target.closest("[data-del]"); if(!b) return;
