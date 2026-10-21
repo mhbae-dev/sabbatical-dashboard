@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-20T23:27:40.222Z",
+ "updated": "2026-10-21T04:57:05.478Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -141,6 +141,19 @@
    "rate": 1,
    "note": "Narita Express",
    "ts": "2026-10-20T23:27:39.445Z"
+  },
+  {
+   "id": "mvhn4eivoe6v",
+   "date": "2026-10-21",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "cash",
+   "amount": 6.76,
+   "currency": "GBP",
+   "gbp": 6.76,
+   "rate": 1,
+   "note": "Lunch",
+   "ts": "2026-10-21T04:57:04.135Z"
   }
  ]
 }
