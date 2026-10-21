@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T12:56:09.420Z",
+ "updated": "2026-10-21T22:15:07.480Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -135,14 +135,14 @@
    "date": "2026-10-22",
    "cat": "rail",
    "kind": "train",
-   "pay": "cash",
+   "pay": "card",
    "amount": 23.25,
    "currency": "GBP",
    "gbp": 23.25,
    "rate": 1,
    "note": "Narita Express",
    "ts": "2026-10-20T23:27:39.445Z",
-   "edited": "2026-10-21T09:00:00.000Z"
+   "edited": "2026-10-21T22:15:06.535Z"
   },
   {
    "id": "mvhn4eivoe6v",
