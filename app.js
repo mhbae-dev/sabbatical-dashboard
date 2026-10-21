@@ -1,7 +1,7 @@
 (function(){
 const CATS = [
   {k:"Flights", c:"--c1"},{k:"Accommodation", c:"--c2"},{k:"Food", c:"--c3"},
-  {k:"Local transport", c:"--c4"},{k:"Activities", c:"--c5"},{k:"Shopping & misc", c:"--c7"},{k:"Insurance & admin", c:"--c6"}
+  {k:"Local transport", c:"--c4"},{k:"Trains & intercity", c:"--c8"},{k:"Activities", c:"--c5"},{k:"Shopping & misc", c:"--c7"},{k:"Insurance & admin", c:"--c6"}
 ];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const gbp = (n,dp) => { const d = dp ?? (Math.abs(n%1)>0.001 ? 2 : 0); return (n<0?"−":"")+"£"+Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:d,maximumFractionDigits:d}); };
@@ -33,6 +33,22 @@ document.querySelector(".tabs").addEventListener("keydown",e=>{
   showTab(TABS[(cur + (e.key==="ArrowRight"?1:TABS.length-1)) % TABS.length], true); e.preventDefault();
 });
 
+// ---------- duplicates
+const DAILY_LINES = new Set(["Food","Local transport","Activities","Shopping & misc"]);
+const amtClose = (x,y) => Math.abs(x-y) <= Math.max(0.05, 0.01*Math.abs(y));
+// a Tracker row (s) and a log entry (e) for the same spend: same Budget line, same amount, same day
+// (or within a week for bookings like hotels, flights, trains and admin, which are often typed with a different date)
+function isTwin(s, e){
+  const line = DCAT[e.cat]?.budgetCat; if (!line || s.cat!==line || !s.date || !/^\d{4}-/.test(s.date)) return false;
+  if (!amtClose(s.amt, e.gbp)) return false;
+  const dd = Math.abs((D(s.date)-D(e.date))/864e5);
+  return DAILY_LINES.has(line) ? dd<1 : dd<=7;
+}
+// two log entries that look like the same spend logged twice
+const sameSpend = (a,b) => a.id!==b.id && a.date===b.date && DCAT[a.cat]?.budgetCat===DCAT[b.cat]?.budgetCat &&
+  (amtClose(a.gbp,b.gbp) || (a.currency && a.currency===b.currency && +a.amount===+b.amount));
+function logTwinOf(e, list){ return list.find(x=>sameSpend(x,e) && ((x.ts||"")<(e.ts||"") || ((x.ts||"")===(e.ts||"") && x.id<e.id))); }
+
 // ---------- model
 function build(doc){
   const d = doc.data;
@@ -44,25 +60,33 @@ function build(doc){
     let meal = cls==="host" ? "With friends" : /incl\.? (meals|dinner)|meals incl/i.test(s.hotel?.notes||"") ? "Meals incl." : "";
     if (s.nights===1 && s.start===d.stops[0].start) meal = meal || "Land late";
     const cur = s.country==="Malaysia & Singapore" && /singapore/i.test(s.where) ? ["MYR","SGD"] : (COUNTRY_CUR[s.country]||[]);
-    return {...s, st, cls, acc, food, total:acc+food+s.trans+s.act+s.misc, meal, cur};
+    return {...s, st, cls, acc, food, total:acc+food+s.trans+s.act+s.misc+s.rail, meal, cur};
   });
   const flights = d.flights.map(f=>({...f, booked:/^booked$/i.test(f.status||"")}));
   const groups=[]; stops.forEach(s=>{ const g=groups[groups.length-1]; if(g&&g.country===s.country){g.nights+=s.nights;g.total+=s.total;g.food+=s.food;g.stops.push(s);} else groups.push({country:s.country,start:s.start,nights:s.nights,total:s.total,food:s.food,stops:[s]}); });
   const planned = {
     "Flights": sum(flights,f=>f.cost), "Accommodation": sum(stops,s=>s.acc), "Food": sum(stops,s=>s.food),
-    "Local transport": sum(stops,s=>s.trans), "Activities": sum(stops,s=>s.act), "Shopping & misc": sum(stops,s=>s.misc), "Insurance & admin": sum(d.admin,a=>a.amt)
+    "Local transport": sum(stops,s=>s.trans), "Trains & intercity": sum(stops,s=>s.rail), "Activities": sum(stops,s=>s.act), "Shopping & misc": sum(stops,s=>s.misc), "Insurance & admin": sum(d.admin,a=>a.amt)
   };
   const LOG = logEntries();
   // Tracker rows copied from the log (Log ID in column J) are counted once, from the log, which is always the newer copy
   const logIds = new Set(LOG.map(e=>e.id));
-  const spend = d.spend.filter(s=>!(s.logId && logIds.has(s.logId)));
+  const spend0 = d.spend.filter(s=>!(s.logId && logIds.has(s.logId)));
+  // A row typed into the Tracker that matches a logged spend is the same spend: count it once (from the log).
+  // The next Tracker sync merges them in the spreadsheet too (scripts/sync_tracker.py, same rule).
+  const manual = spend0.filter(s=>!s.logId);
+  const bookingTwin = s => { if (DAILY_LINES.has(s.cat)) return false;
+    const es = LOG.filter(e=>DCAT[e.cat]?.budgetCat===s.cat && amtClose(s.amt,e.gbp)), ss = manual.filter(x=>x.cat===s.cat && amtClose(x.amt,s.amt));
+    return es.length===1 && ss.length===1; };
+  const dupRows = manual.filter(s=>LOG.some(e=>isTwin(s,e)) || bookingTwin(s));
+  const spend = spend0.filter(s=>!dupRows.includes(s));
   const committed={}; CATS.forEach(c=>committed[c.k]=sum(spend.filter(s=>s.cat===c.k),s=>s.amt) + sum(LOG.filter(e=>DCAT[e.cat]?.budgetCat===c.k),e=>e.gbp));
   const other = sum(spend.filter(s=>!CATS.some(c=>c.k===s.cat)),s=>s.amt);
   const totalPlan = sum(CATS,c=>planned[c.k]);
   const logTotal = sum(LOG,e=>e.gbp);
   const totalCommitted = sum(spend,s=>s.amt) + logTotal;
   const nights = sum(stops,s=>s.nights);
-  return {doc, d:{...d, spend}, budget:d.budget, stops, flights, groups, planned, committed, other, totalPlan, totalCommitted,
+  return {doc, d:{...d, spend}, dupRows, budget:d.budget, stops, flights, groups, planned, committed, other, totalPlan, totalCommitted,
     buffer:d.budget-totalPlan, nights, logTotal, logCount:LOG.length, ground:sum(stops,s=>s.total)};
 }
 
@@ -110,7 +134,8 @@ function renderOverview(M){
   // next up: urgent flights to book, then open checklist items
   const items = [];
   M.flights.filter(f=>!f.booked && /this week|now|asap/i.test(f.by||"")).forEach(f=>items.push([`Book ${code(f.from)} → ${code(f.to)} flight (${fmtD(f.date)})`, f.by, true]));
-  M.d.todo.filter(t=>!t.done).forEach(t=>items.push([t.task, t.due||"", /this week|asap|today/i.test(t.due||"")]));
+  const ticked = new Set(metaEntries("taskDone").map(x=>x.key));
+  M.d.todo.filter(t=>!t.done && !ticked.has("todo:"+t.task)).forEach(t=>items.push([t.task, t.due||"", /this week|asap|today/i.test(t.due||"")]));
   const shown = items.slice(0,8);
   $("todo").innerHTML = shown.length ? shown.map(([t,w,u])=>`<li><span>${esc(t)}</span><span class="when chip ${u?"urgent":"todo"}">${esc(w)}</span></li>`).join("") + (items.length>8?`<li class="note">+ ${items.length-8} more on the checklist tab of your spreadsheet</li>`:"") : `<li class="note">Nothing open. Everything on your checklist is ticked.</li>`;
 
@@ -146,6 +171,7 @@ const DCATS = [
   {k:"shop", label:"Shopping & misc", c:"--c7", budgetCat:"Shopping & misc", daily:true},
   {k:"accom", label:"Accommodation", c:"--c2", budgetCat:"Accommodation", daily:false},
   {k:"flights", label:"Flights", c:"--c1", budgetCat:"Flights", daily:false},
+  {k:"rail", label:"Trains & intercity", c:"--c8", budgetCat:"Trains & intercity", daily:false},
   {k:"admin", label:"Insurance & admin", c:"--c6", budgetCat:"Insurance & admin", daily:false}
 ];
 const DAILY_CATS = DCATS.filter(c=>c.daily);
@@ -165,6 +191,7 @@ const KINDS = [
   {k:"misc",       e:"✨", chip:"Other",      label:"Other",               cat:"shop",      c:"--k9"},
   {k:"hotel",      e:"🏨", chip:"Hotel",      label:"Accommodation",       cat:"accom",     c:"--c2"},
   {k:"flight",     e:"✈️", chip:"Flight",     label:"Flights",             cat:"flights",   c:"--c1"},
+  {k:"train",      e:"🚄", chip:"Train / coach", label:"Trains & intercity", cat:"rail",     c:"--c8"},
   {k:"admin",      e:"📄", chip:"Visa & admin", label:"Insurance, visas & admin", cat:"admin", c:"--c6"}
 ];
 const KIND = Object.fromEntries(KINDS.map(x=>[x.k,x]));
@@ -183,6 +210,7 @@ function kindOf(e){
   if (e.cat==="transport") return "transport";
   if (e.cat==="accom") return "hotel";
   if (e.cat==="flights") return "flight";
+  if (e.cat==="rail") return "train";
   if (e.cat==="admin") return "admin";
   // "other" used to cover activities, shopping, essentials and everything else
   const group = e.cat==="other" ? ["other","shop"] : [e.cat];
@@ -235,6 +263,10 @@ function budgetState(M, T){
   const days = tripDays(M), idx = Object.fromEntries(days.map((d,i)=>[d.date,i]));
   const D = Object.fromEntries(days.map(d=>[d.date,{spent:0, cats:{}, spreadIn:[], allow:d.total, base:d.total, floored:false, carry:0}]));
   const treatSpends = [];
+  // a past day with nothing logged and not confirmed as "nothing spent" counts at plan until you sort it out,
+  // so a forgotten day never makes a stay look under budget
+  const logged = new Set(allEntries().filter(e=>!META.has(e.cat) || e.cat==="noSpend").map(e=>e.date));
+  const unconfirmed = days.filter(d=>d.date<T && !logged.has(d.date)).map(d=>d.date);
   logEntries().filter(isDaily).forEach(e=>{
     const f = fundOf(e), d = days[idx[e.date]];
     if (f==="treat") { treatSpends.push(e); return; }
@@ -251,15 +283,16 @@ function budgetState(M, T){
     sd.forEach((d,i)=>{
       const x = D[d.date], roll = (pot-used)/(sd.length-i), floor = FLOOR*d.total;
       x.allow = Math.max(floor, roll); x.floored = roll < floor - 0.005; x.carry = x.allow - d.total;
+      x.unconfirmed = unconfirmed.includes(d.date); x.eff = x.unconfirmed ? Math.max(x.spent, d.total) : x.spent;
       // days still to come are assumed to use their budget (or what's already logged for them, if more)
-      used += d.date < T ? x.spent : Math.max(x.spent, x.allow);
+      used += d.date < T ? x.eff : Math.max(x.spent, x.allow);
     });
-    const spent = sum(sd,d=>D[d.date].spent), end = addD(st.start, st.nights);
-    return {stop:st, days:sd, pot, spent, diff:pot-spent, done:end<=T, end};
+    const spent = sum(sd,d=>D[d.date].eff), end = addD(st.start, st.nights);
+    return {stop:st, days:sd, pot, spent, diff:pot-spent, done:end<=T, end, unconfirmed:sd.filter(d=>D[d.date].unconfirmed).length};
   }).filter(Boolean);
   const doneStops = stops.filter(s=>s.done);
   const fundIn = sum(doneStops,s=>s.diff), fundOut = sum(treatSpends,e=>e.gbp);
-  return {days:D, stops, doneStops, treatSpends, fundIn, fundOut, fund:fundIn-fundOut};
+  return {days:D, stops, doneStops, treatSpends, fundIn, fundOut, fund:fundIn-fundOut, unconfirmed};
 }
 
 function fundTag(e, B){
@@ -291,6 +324,10 @@ function renderDaily(M){
   $("day-today")?.addEventListener("click",()=>{ SEL=T; renderDaily(M); });
   renderTonight(M, days, day, T);
   renderPayback();
+  renderUnlogged(M, B, T);
+  renderWrapup(M, B, day, T);
+  renderTodo(M, T);
+  renderWallet(M, s, T);
 
   const over = left < 0;
   $("day-hero").innerHTML = `
@@ -313,8 +350,10 @@ function renderDaily(M){
 
   // entries for the day
   $("day-entries").innerHTML = act.entries.length ? act.entries.sort((a,b)=>(a.ts||"").localeCompare(b.ts||"")).map(e=>`
-    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="kem" aria-hidden="true">${KIND[kindOf(e)].e}</span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||KIND[kindOf(e)].label)}">${esc(e.note||KIND[kindOf(e)].label)}<small>${KIND[kindOf(e)].label}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.pay==="cash"?" · 💵 cash":""}${fundTag(e,B)}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
+    <li${EDITING&&EDITING.id===e.id?' class="editing"':""}><span class="kem" aria-hidden="true">${KIND[kindOf(e)].e}</span><button type="button" class="what" data-edit="${esc(e.id)}" aria-label="Edit ${esc(e.note||KIND[kindOf(e)].label)}">${esc(e.note||KIND[kindOf(e)].label)}<small>${KIND[kindOf(e)].label}${e.currency!=="GBP"?` · ${fmtLocal(e.amount,e.currency)}`:""}${e.pay==="cash"?" · 💵 cash":""}${fundTag(e,B)}${logTwinOf(e,act.entries)?` · <span class="dupflag">⚠️ same as another spend this day – delete one if it's a repeat</span>`:""}${e.edited?" · edited":""}${e.pending?" · waiting to sync":""}</small></button><span class="amt">${gbp(e.gbp,2)}</span><button type="button" class="del" data-del="${esc(e.id)}" aria-label="Delete ${esc(e.note||"entry")}">×</button></li>`).join("")
     : `<li class="note">Nothing logged for this day yet.</li>`;
+  const none = metaEntries("noSpend").filter(x=>x.date===SEL);
+  if (none.length && !act.entries.length) $("day-entries").innerHTML = `<li class="note">Marked as nothing spent. <button type="button" class="linkbtn sm" data-unnone="${esc(none[0].id)}">Undo</button></li>`;
   const spreadHere = bd.spreadIn.filter(p=>p.e.date!==SEL);
   if (spreadHere.length) $("day-entries").insertAdjacentHTML("beforeend", spreadHere.map(p=>`<li class="spread-in"><span class="kem" aria-hidden="true">↔️</span><span class="what">${esc(p.e.note||KIND[kindOf(p.e)].label)}<small>Spread from ${fmtD(p.e.date,{weekday:"short",day:"numeric",month:"short"})} · ${gbp(p.e.gbp,2)} over ${p.n} days</small></span><span class="amt">${gbp(p.part,2)}</span><span></span></li>`).join(""));
 
@@ -333,21 +372,22 @@ function renderDaily(M){
   const lastDone = T<first ? null : (T>last ? last : T);
   const doneDays = lastDone ? days.filter(d=>d.date<=lastDone) : [];
   const allowToDate = sum(doneDays,d=>d.total);
-  const actualToDate = sum(doneDays,d=>B.days[d.date].spent);
+  const actualToDate = sum(doneDays,d=>B.days[d.date].eff);
   const diff = allowToDate - actualToDate;
   const cur = B.stops.find(x=>x.stop===(days.find(d=>d.date===(T<first?first:T>last?last:T))||days[0]).stop);
   const past = cur.days.filter(d=>d.date<T), ahead = cur.days.filter(d=>d.date>=T);
-  const curDiff = sum(past,d=>d.total-B.days[d.date].spent), curLeft = cur.pot - sum(past,d=>B.days[d.date].spent);
+  const curDiff = sum(past,d=>d.total-B.days[d.date].eff), curLeft = cur.pot - sum(past,d=>B.days[d.date].eff);
   const fundNote = B.doneStops.length
     ? B.doneStops.slice(-3).map(x=>`${esc(short(x.stop.where))} <b class="${x.diff<0?"neg":""}">${x.diff>=0?"+":"−"}${gbp(Math.abs(x.diff),0)}</b>`).join(" · ") + (B.doneStops.length>3?` · ${B.doneStops.length-3} more`:"") + (B.fundOut?` · ${gbp(B.fundOut,2)} spent from it`:"")
     : `Fills up as each stay ends under budget${B.fundOut?` · ${gbp(B.fundOut,2)} spent from it so far`:""}`;
+  const unc = sum(B.doneStops,x=>x.unconfirmed);
   $("trip-stats").innerHTML = `
     <div class="fstat"><div class="eyebrow">${esc(short(cur.stop.where))} so far</div>
       <div class="v ${curDiff<0?"neg":""}">${past.length ? (curDiff>=0?gbp(curDiff,0)+"<small> under</small>":gbp(-curDiff,0)+"<small> over</small>") : gbp(cur.pot,0)+"<small> for the stay</small>"}</div>
       <div class="n">${ahead.length ? `${gbp(curLeft,0)} left for ${ahead.length} day${ahead.length>1?"s":""} · ${gbp(Math.max(0,curLeft)/ahead.length,2)} a day` : `Stay finished`} · plan ${gbp(cur.days[0].total,2)} a day</div></div>
     <div class="fstat hero"><div class="eyebrow">🎁 Treat fund</div>
       <div class="v ${B.fund<0?"neg":""}">${B.fund<0?"−":""}${gbp(Math.abs(B.fund),2)}</div>
-      <div class="n">${fundNote}${B.fund<0?" · overspend comes out of contingency":""}</div></div>
+      <div class="n">${fundNote}${B.fund<0?" · overspend comes out of contingency":""}${unc?` · ${unc} day${unc>1?"s":""} with nothing logged counted at plan`:""}</div></div>
     <div class="fstat"><div class="eyebrow">Trip so far</div>
       <div class="v ${diff<0?"neg":""}">${doneDays.length? (diff>=0?gbp(diff,0)+"<small> under</small>":gbp(-diff,0)+"<small> over</small>") : "–"}</div>
       <div class="n">${doneDays.length?`${gbp(actualToDate,0)} spent of ${gbp(allowToDate,0)} planned over ${doneDays.length} day${doneDays.length>1?"s":""} · treat-fund spends not included`:"Starts "+fmtD(first)}</div></div>`;
@@ -385,13 +425,14 @@ function renderDailyChart(M, days, T){
   // actual bars
   days.forEach((d,i)=>{ const a=actuals[i]; if(!a) return; const over=a>allow[i]+0.005;
     g += `<rect x="${X(i)+bw*0.15}" y="${Y(a)}" width="${Math.max(1,bw*0.7)}" height="${Y(0)-Y(a)}" rx="1.5" fill="var(${over?"--crit":"--c1"})" fill-opacity="${over?.85:.75}"/>`; });
+  days.forEach((d,i)=>{ if (B.days[d.date].unconfirmed) g += `<text x="${X(i)+bw/2}" y="${Y(0)-4}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--warn-ink)">?</text>`; });
   // budget step line
   const step2 = f => { let p=""; days.forEach((d,i)=>{ const y=Y(f(d,i)); p += (i?` L${X(i)},${y}`:`M${X(i)},${y}`)+` L${X(i+1)},${y}`; }); return p; };
   g += `<path d="${step2(d=>d.total)}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linejoin="round"/>`;
   g += `<path d="${step2((d,i)=>allow[i])}" fill="none" stroke="var(--c3)" stroke-width="2.5" stroke-linejoin="round"/>`;
   // hit areas
   days.forEach((d,i)=>{ const a=actuals[i];
-    const tip = `<b>${fmtD(d.date,{weekday:"short",day:"numeric",month:"short"})}</b>${esc(short(d.stop.where))} · budget ${gbp(allow[i],2)}${Math.abs(allow[i]-d.total)>=0.5?` (plan ${gbp(d.total,2)})`:""}<br>${a?`Spent ${gbp(a,2)} (${a>allow[i]?gbp(a-allow[i],2)+" over":gbp(allow[i]-a,2)+" under"})`:"Nothing logged"}`;
+    const tip = `<b>${fmtD(d.date,{weekday:"short",day:"numeric",month:"short"})}</b>${esc(short(d.stop.where))} · budget ${gbp(allow[i],2)}${Math.abs(allow[i]-d.total)>=0.5?` (plan ${gbp(d.total,2)})`:""}<br>${a?`Spent ${gbp(a,2)} (${a>allow[i]?gbp(a-allow[i],2)+" over":gbp(allow[i]-a,2)+" under"})`:B.days[d.date].unconfirmed?"Nothing logged yet – counted at plan":"Nothing logged"}`;
     g += `<rect class="hit" x="${X(i)}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent" data-tip="${esc(tip)}" data-day="${d.date}" style="cursor:pointer"/>`; });
   // country bands
   let a2=0; M.groups.forEach(gr=>{ const x0=X(a2)+1, x1=X(a2+gr.nights)-1; a2+=gr.nights;
@@ -406,6 +447,147 @@ function renderDailyChart(M, days, T){
   wrap.innerHTML = g + `</svg>`;
 }
 $("daily-chart-wrap").addEventListener("click", e=>{ const d=e.target.closest?.("[data-day]")?.dataset.day; if(d && MODEL){ SEL=d; renderDaily(MODEL); $("p-daily").scrollIntoView({behavior:"smooth",block:"start"}); } });
+
+
+// ---------- days with nothing logged
+function renderUnlogged(M, B, T){
+  const el = $("unlogged"); if (!el) return;
+  const list = B.unconfirmed.slice(-3).reverse();
+  if (!list.length) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = `<div class="ul-h"><b>${B.unconfirmed.length===1?"A day":B.unconfirmed.length+" days"} with nothing logged</b><small>Counted at plan until you add spends or confirm you spent nothing</small></div>` +
+    list.map(d=>`<div class="ul-row"><span>${fmtD(d,{weekday:"short",day:"numeric",month:"short"})}</span><span class="btns2"><button type="button" class="linkbtn sm" data-goto="${d}">Add spends</button><button type="button" class="btn sm" data-none="${d}">Nothing spent</button></span></div>`).join("") +
+    (B.unconfirmed.length>3?`<div class="note">+ ${B.unconfirmed.length-3} earlier</div>`:"");
+}
+$("unlogged").addEventListener("click", e=>{
+  const g=e.target.closest("[data-goto]"); if (g && MODEL) { SEL=g.dataset.goto; renderDaily(MODEL); $("log-form").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  const n=e.target.closest("[data-none]"); if (n) addMeta("noSpend", {date:n.dataset.none});
+});
+
+// ---------- end-of-stay wrap-up (first two days of the next stay)
+function renderWrapup(M, B, day, T){
+  const el = $("wrapup"); if (!el) return;
+  const i = B.stops.findIndex(x=>x.stop===day.stop), prev = B.stops[i-1];
+  if (!prev || !prev.done || day.i>1) { el.hidden = true; return; }
+  const ents = logEntries().filter(e=>e.date>=prev.stop.start && e.date<prev.end);
+  const daily = ents.filter(e=>isDaily(e) && fundOf(e)!=="treat");
+  const byKind = {}; daily.forEach(e=>byKind[e.kind]=(byKind[e.kind]||0)+e.gbp);
+  const top = Object.entries(byKind).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const big = daily.slice().sort((a,b)=>b.gbp-a.gbp)[0];
+  const other = ents.filter(e=>!isDaily(e)), treats = ents.filter(e=>isDaily(e) && fundOf(e)==="treat");
+  const n = prev.stop.nights, under = prev.diff>=0;
+  el.hidden = false;
+  el.innerHTML = `<div class="card-head"><h2>${esc(short(prev.stop.where))}, wrapped up</h2><span class="sub">${fmtD(prev.stop.start)} – ${fmtD(prev.end)} · ${n} night${n>1?"s":""}</span></div>
+    <div class="wu-grid">
+      <div><div class="eyebrow">Day-to-day</div><div class="v">${gbp(prev.spent,0)}<small> of ${gbp(prev.pot,0)}</small></div><div class="n">${gbp(prev.spent/n,2)} a day · plan ${gbp(prev.pot/n,2)}</div></div>
+      <div><div class="eyebrow">Treat fund</div><div class="v ${under?"":"neg"}">${under?"+":"−"}${gbp(Math.abs(prev.diff),2)}</div><div class="n">${under?"left over, added to the fund":"over, taken from the fund"}</div></div>
+    </div>
+    ${top.length?`<div class="wu-top">${top.map(([k,v])=>`<span class="chip">${KIND[k].e} ${KIND[k].chip} ${gbp(v,0)}</span>`).join("")}</div>`:""}
+    <p class="note">${big?`Biggest: ${esc(big.note||KIND[big.kind].label)} ${gbp(big.gbp,2)}. `:""}${treats.length?`From the treat fund: ${gbp(sum(treats,e=>e.gbp),2)}. `:""}${other.length?`Also logged: ${gbp(sum(other,e=>e.gbp),2)} on stays, flights, trains and admin. `:""}${prev.unconfirmed?`${prev.unconfirmed} day${prev.unconfirmed>1?"s":""} had nothing logged and count at plan.`:""}</p>`;
+}
+
+// ---------- bookings & to-dos with deadlines (checklist tab + flights still to book)
+const MON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+const isoOf = (m, day) => { const y = m>=6 ? 2026 : 2027; return `${y}-${String(m+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`; };
+const lastDay = m => new Date(Date.UTC(m>=6?2026:2027, m+1, 0)).getUTCDate();
+// "Before 11 Nov" / "Early Nov" / "Within 3 days of 26 Nov" / "Now" → the date it's due by (ISO), or null
+function dueBy(txt, T){
+  const s = String(txt||"").toLowerCase();
+  if (/^(now|asap|soon|today|this week)/.test(s)) return T;
+  let m = s.match(/within (\d+) days? of (\d{1,2}) ([a-z]{3})/); if (m && MON[m[3]]!=null) return isoOf(MON[m[3]], +m[2]);
+  const dates = [...s.matchAll(/(\d{1,2}) ([a-z]{3})/g)].filter(x=>MON[x[2]]!=null).map(x=>isoOf(MON[x[2]], +x[1]));
+  if (dates.length) return dates.find(d=>d>=T) || dates[dates.length-1];
+  m = s.match(/(early|mid|late|end)[ -]?([a-z]{3})/); if (m && MON[m[2]]!=null) { const mo=MON[m[2]]; return isoOf(mo, m[1]==="early"?10:m[1]==="mid"?20:lastDay(mo)); }
+  return null;
+}
+function todoItems(M, T){
+  const ticked = new Set(metaEntries("taskDone").map(x=>x.key));
+  const items = M.d.todo.filter(t=>!t.done).map(t=>({key:"todo:"+t.task, what:t.task, when:t.due, notes:t.notes, by:dueBy(t.due,T)}));
+  const word = x => String(x||"").split(/[\s(/]/)[0].toLowerCase();
+  M.flights.filter(f=>!f.booked && f.by && !/^done$/i.test(f.by)).forEach(f=>{
+    const a = word(f.from), b = word(f.to);
+    if (items.some(t=>/^book/i.test(t.what) && t.what.toLowerCase().includes(a) && t.what.toLowerCase().includes(b))) return;
+    items.push({key:`flight:${f.from}>${f.to}:${f.date}`, what:`Book ${short(f.from)} → ${short(f.to)} flight (${fmtD(f.date)})`, when:f.by, notes:f.notes, by:dueBy(f.by,T)});
+  });
+  return items.filter(t=>!ticked.has(t.key)).sort((x,y)=>(x.by||"9999").localeCompare(y.by||"9999"));
+}
+let TODO_OPEN = false;
+function renderTodo(M, T){
+  const el = $("todo-card"); if (!el) return;
+  const items = todoItems(M, T); if (!items.length) { el.hidden = true; return; }
+  const days = d => Math.round((D(d)-D(T))/864e5);
+  const soon = items.filter(t=>t.by && days(t.by)<=14), later = items.filter(t=>!soon.includes(t));
+  const row = t => { const n = t.by!=null ? days(t.by) : null;
+    const tag = n==null ? `<span class="chip todo">${esc(t.when||"No date")}</span>` : n<0 ? `<span class="chip urgent">${-n} day${n<-1?"s":""} overdue</span>` : n===0 ? `<span class="chip urgent">Due today</span>` : `<span class="chip ${n<=3?"urgent":"todo"}">${n} day${n>1?"s":""} left</span>`;
+    return `<li><button type="button" class="tick" data-tick="${esc(t.key)}" aria-label="Mark done: ${esc(t.what)}"></button><div><b>${esc(t.what)}</b><small>${esc(t.when||"")}${t.notes?` · ${esc(t.notes)}`:""}</small></div>${tag}</li>`; };
+  const done = metaEntries("taskDone").sort((a,b)=>(b.ts||"").localeCompare(a.ts||""))[0];
+  el.hidden = false;
+  el.innerHTML = `<div class="card-head"><h2>To book &amp; do</h2><span class="sub">From the checklist and flights tabs · tick when done</span></div>
+    <ul class="todo-list">${soon.map(row).join("") || `<li class="note">Nothing due in the next two weeks.</li>`}</ul>
+    ${later.length?`<details class="todo-later"${TODO_OPEN?" open":""}><summary>${later.length} later</summary><ul class="todo-list">${later.map(row).join("")}</ul></details>`:""}
+    ${done?`<p class="note">Last ticked: ${esc(done.what||done.key)} <button type="button" class="linkbtn sm" data-untick="${esc(done.id)}">Undo</button></p>`:""}`;
+}
+$("todo-card").addEventListener("click", e=>{
+  const t=e.target.closest("[data-tick]"); if (t && MODEL) { const it=todoItems(MODEL, isoToday()).find(x=>x.key===t.dataset.tick); addMeta("taskDone", {key:t.dataset.tick, what:it?.what||"", date:isoToday()}); return; }
+  const u=e.target.closest("[data-untick]"); if (u) delMeta(u.dataset.untick);
+});
+$("todo-card").addEventListener("toggle", e=>{ if (e.target.matches?.(".todo-later")) TODO_OPEN = e.target.open; }, true);
+
+// ---------- cash wallet: withdrawals in, cash spends out, per currency
+function walletBalances(){
+  const ev = [];
+  allEntries().forEach(e=>{
+    if (e.cat==="cashin") ev.push({c:e.currency, t:e.ts, d:+e.amount, e});
+    else if (e.cat==="cashcount") ev.push({c:e.currency, t:e.ts, set:+e.amount, e});
+    else if (!META.has(e.cat) && e.pay==="cash") ev.push({c:e.currency, t:e.ts||e.date, d:-(+e.amount), e});
+  });
+  ev.sort((x,y)=>String(x.t).localeCompare(String(y.t)));
+  const bal = {}, start = {};
+  ev.forEach(x=>{
+    if (x.set!=null) { bal[x.c] = x.set; start[x.c] = true; }
+    else if (x.e.cat==="cashin") { bal[x.c] = (bal[x.c]||0) + x.d; start[x.c] = true; }
+    else if (start[x.c]) bal[x.c] += x.d;   // cash spent before any withdrawal or count in that currency isn't tracked
+  });
+  return {bal, ev};
+}
+function renderWallet(M, s, T){
+  const el = $("wallet"); if (!el) return;
+  const {bal, ev} = walletBalances();
+  const curs = [...new Set([...(s.cur||[]), ...Object.keys(bal).filter(c=>Math.abs(bal[c])>0.004)])];
+  // leaving a currency soon? (the next stay uses different money)
+  const days = tripDays(M), today = days.find(d=>d.date===T);
+  let leaving = "";
+  if (today) {
+    const st = today.stop, idx = M.stops.indexOf(st), next = M.stops[idx+1];
+    const out = addD(st.start, st.nights), left = Math.round((D(out)-D(T))/864e5);
+    const gone = (st.cur||[]).filter(c=>!(next?.cur||[]).includes(c) && (bal[c]||0)>0);
+    if (left<=2 && gone.length) leaving = `<p class="wl-warn">Leaving ${esc(st.country)} ${left===0?"today":left===1?"tomorrow":"in 2 days"}: ${gone.map(c=>`${fmtLocal(bal[c],c)}${rate(c)?` (≈ ${gbp(bal[c]/rate(c),2)})`:""}`).join(", ")} left. Spend it down or keep it for the way back.</p>`;
+  }
+  const opts = [...new Set([...(s.cur||[]), ...Object.keys(CUR)])];
+  const recent = ev.filter(x=>x.e.cat==="cashin"||x.e.cat==="cashcount").slice(-4).reverse();
+  if (!$("wallet-form")) el.innerHTML = `<div class="card-head"><h2>💵 Cash wallet</h2><span class="sub">Withdrawals in, cash spends out. Not part of the budget</span></div>
+    <div id="wallet-body"></div>
+    <form class="wl-form" id="wallet-form" autocomplete="off">
+      <label class="sr" for="w-amt">Amount</label><input id="w-amt" type="number" inputmode="decimal" step="any" min="0" placeholder="Amount">
+      <label class="sr" for="w-cur">Currency</label><select id="w-cur"></select>
+      <button type="submit" class="btn sm" data-act="in">🏧 Withdrew</button>
+      <button type="submit" class="linkbtn sm" data-act="count">Counted</button>
+    </form>
+    <p class="note">🏧 adds cash you took out. <b>Counted</b> sets the wallet to what you actually have. Log ATM fees as Visa &amp; admin.</p>
+    <ul class="wl-recent" id="wallet-recent"></ul>`;
+  $("wallet-body").innerHTML = `<div class="wl-bal">${curs.length ? curs.map(c=>`<div class="wl-c"><div class="eyebrow">${c}</div><div class="v ${(bal[c]||0)<0?"neg":""}">${(bal[c]||0)<0?"−":""}${fmtLocal(Math.abs(bal[c]||0),c)}</div><div class="n">${c!=="GBP"&&rate(c)?"≈ "+gbp((bal[c]||0)/rate(c),2):""}</div></div>`).join("") : `<p class="note">No cash yet. Add a withdrawal below.</p>`}</div>${leaving}`;
+  const sel = $("w-cur"), want = opts.join(",");
+  if (sel.dataset.opts!==want && document.activeElement!==sel) { const v = sel.value; sel.innerHTML = opts.map(c=>`<option>${c}</option>`).join(""); sel.value = opts.includes(v) ? v : opts[0]; sel.dataset.opts = want; }
+  $("wallet-recent").innerHTML = recent.map(x=>`<li>${x.e.cat==="cashin"?"🏧 Withdrew":"🧮 Counted"} ${fmtLocal(x.e.amount,x.e.currency)} <small>${fmtD(x.e.date)}</small><button type="button" class="del" data-wdel="${esc(x.e.id)}" aria-label="Remove">×</button></li>`).join("");
+}
+$("wallet").addEventListener("submit", e=>{
+  e.preventDefault();
+  const act = e.submitter?.dataset.act || "in", amount = parseFloat($("w-amt").value), currency = $("w-cur").value;
+  if (!(amount>=0) || (act==="in" && !(amount>0))) { $("w-amt").focus(); return; }
+  addMeta(act==="in"?"cashin":"cashcount", {date:isoToday(), currency, amount});
+  $("w-amt").value = "";
+});
+$("wallet").addEventListener("click", e=>{ const d=e.target.closest("[data-wdel]"); if (d) delMeta(d.dataset.wdel); });
 
 // ---------- logging form
 function selStop(){ if(!MODEL) return null; const d=tripDays(MODEL).find(x=>x.date===$("log-date").value); return d?.stop || null; }
@@ -428,6 +610,22 @@ $("log-form").addEventListener("submit", e=>{
   const sameMoney = EDITING && EDITING.amount===amount && EDITING.currency===currency;
   const r = sameMoney ? EDITING.rate : rate(currency);
   const gbpVal = sameMoney ? EDITING.gbp : Math.round(amount/r*100)/100;
+  const twin = !EDITING && logEntries().find(x=>sameSpend(x,{id:"new", date, cat, gbp:gbpVal, currency, amount}));
+  // a booking (hotel, flight, train, admin) that's already typed into the Tracker
+  const line = DCAT[cat].budgetCat;
+  const tTwin = !EDITING && !twin && !DCAT[cat].daily && (DATA?.spend||[]).find(s=>!s.logId && s.cat===line && amtClose(s.amt,gbpVal));
+  const sig = [date,cat,gbpVal].join("|");
+  if (twin && DUP_SIG!==sig) {
+    DUP_SIG = sig;
+    $("log-msg").innerHTML = `⚠️ Looks like a repeat of <b>${esc(twin.note||KIND[kindOf(twin)].label)}</b> (${gbp(twin.gbp,2)}), already logged for ${fmtD(date)}. Tap <b>Add</b> again if it's a separate spend.`;
+    return;
+  }
+  if (tTwin && DUP_SIG!==sig) {
+    DUP_SIG = sig;
+    $("log-msg").innerHTML = `⚠️ Already in the spreadsheet's Tracker: <b>${esc(tTwin.desc||line)}</b> (${gbp(tTwin.amt,2)}${tTwin.date?`, ${/^\d{4}-/.test(tTwin.date)?fmtD(tTwin.date):esc(tTwin.date)}`:""}). It's already counted, so logging it would count it twice. Tap <b>Add</b> again only if it's a separate payment.`;
+    return;
+  }
+  DUP_SIG = null;
   if (EDITING) {
     const entry = {...EDITING, date, cat, kind, pay, amount, currency, gbp:gbpVal, rate:r, note, edited:new Date().toISOString()};
     delete entry.pending; if (fund==="day") delete entry.fund; else entry.fund = fund;
@@ -444,7 +642,7 @@ $("log-form").addEventListener("submit", e=>{
   $("log-amt").value=""; $("log-note").value=""; $("fund-day").checked = true; updateKindHint(); updateLogPreview();
   SEL = date; rerender();
 });
-let EDITING = null;
+let EDITING = null, DUP_SIG = null;
 function renderSyncStatusLater(){ setTimeout(renderSyncStatus,0); }
 function startEditing(id){
   const e = logEntries().find(x=>x.id===id); if(!e) return;
@@ -465,6 +663,7 @@ function stopEditing(){
 }
 $("log-cancel").addEventListener("click", ()=>{ stopEditing(); $("log-amt").value=""; $("log-note").value=""; $("fund-day").checked = true; updateKindHint(); $("log-msg").textContent=""; rerender(); });
 $("day-entries").addEventListener("click", e=>{
+  const un=e.target.closest("[data-unnone]"); if(un){ delMeta(un.dataset.unnone); return; }
   const ed=e.target.closest("[data-edit]"); if(ed){ startEditing(ed.dataset.edit); return; }
   const b=e.target.closest("[data-del]"); if(!b) return;
   if (b.dataset.confirm!=="1") { b.dataset.confirm="1"; b.textContent="Delete?"; b.classList.add("confirm"); setTimeout(()=>{ if(b.isConnected){ b.dataset.confirm=""; b.textContent="×"; b.classList.remove("confirm"); } },3000); return; }
@@ -489,10 +688,19 @@ function applyOps(entries, ops){
   });
   return out;
 }
-function logEntries(){
+// The log also keeps a few records that aren't spends, and are never counted as spending:
+// noSpend (you confirmed nothing was spent that day), cashin (cash withdrawn), cashcount (cash counted),
+// taskDone (a checklist or booking item ticked off here).
+const META = new Set(["noSpend","cashin","cashcount","taskDone"]);
+function allEntries(){
   const pendingIds = new Set(PENDING.filter(o=>o.op==="add"||o.op==="edit").map(o=>o.entry.id));
-  return applyOps(REMOTE.entries||[], PENDING).map(e=>normEntry(pendingIds.has(e.id)?{...e,pending:true}:e));
+  return applyOps(REMOTE.entries||[], PENDING).map(e=>pendingIds.has(e.id)?{...e,pending:true}:e);
 }
+function logEntries(){ return allEntries().filter(e=>!META.has(e.cat)).map(normEntry); }
+const metaEntries = cat => allEntries().filter(e=>e.cat===cat);
+const newId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function addMeta(cat, fields){ queueOp({op:"add", entry:{id:newId(), cat, ...fields, ts:new Date().toISOString()}}); rerender(); }
+function delMeta(id){ queueOp({op:"del", id}); rerender(); }
 function queueOp(op){ PENDING.push(op); ls.set("sabbatical-pending", PENDING); syncLog(); }
 
 const b64enc = str => { const bytes=new TextEncoder().encode(str); let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin); };
@@ -900,7 +1108,7 @@ function renderBudget(M){
     return `<div class="cbar" tabindex="0" data-tip="${esc(`<b>${c}</b>${x.nights} nights · ${gbp(x.total)} budget<br>${gbp(Math.round(x.total/x.nights))} per day${sp?`<br>Committed so far: ${gbp(sp)}`:""}`)}"><div>${esc(c)}</div><div class="t"><div style="width:${x.total/cmax*100}%"></div>${sp?`<div class="spent" style="width:${Math.max(sp/cmax*100,0.8)}%"></div>`:""}</div><div class="val"><b>${gbp(x.total)}</b><small>${x.nights}n · ${gbp(Math.round(x.total/x.nights))}/day</small></div></div>`; }).join("");
 
   const catC = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
-  $("spend-sum").textContent = `${gbp(M.totalCommitted)} across ${M.d.spend.length} bookings${M.logCount?` + ${M.logCount} daily spends`:""}`;
+  $("spend-sum").textContent = `${gbp(M.totalCommitted)} across ${M.d.spend.length} bookings${M.logCount?` + ${M.logCount} daily spends`:""}${M.dupRows.length?` · ${M.dupRows.length} Tracker row${M.dupRows.length>1?"s":""} matching a logged spend counted once (${M.dupRows.map(s=>`${s.desc} ${gbp(s.amt,2)}`).join(", ")})`:""}`;
   $("spend").innerHTML = `<thead><tr><th>Date</th><th>What</th><th class="r">Amount</th></tr></thead><tbody>` +
     M.d.spend.map(s=>`<tr><td class="nw">${/^\d{4}-\d\d-\d\d$/.test(s.date||"")?fmtD(s.date):esc(s.date)}</td><td><span class="sw" style="background:var(${catC[s.cat]||"--muted"})"></span>${esc(s.desc)}<div class="note">${esc(s.cat)} · ${esc(s.country)}${s.status&&s.status!=="Paid"?" · "+esc(s.status):""}</div></td><td class="r">${gbp(s.amt)}</td></tr>`).join("") +
     DCATS.map(c=>{ const es=logEntries().filter(e=>e.cat===c.k); if(!es.length) return "";
@@ -944,7 +1152,7 @@ function parseWorkbook(buf){
     data.stops.push({
       country: val("Itinerary","A"+r), where: val("Itinerary","B"+r), start: d, nights,
       accN: hasHotels && raw("Hotels","H"+r)!=null ? num("Hotels","H"+r) : num("Itinerary","E"+r),
-      foodD: num("Itinerary","F"+r), trans: num("Itinerary","G"+r), act: num("Itinerary","H"+r), misc: num("Itinerary","O"+r), note: val("Itinerary","N"+r),
+      foodD: num("Itinerary","F"+r), trans: num("Itinerary","G"+r), act: num("Itinerary","H"+r), misc: num("Itinerary","O"+r), rail: num("Itinerary","P"+r), note: val("Itinerary","N"+r),
       hotel: { name:H("F"), status:H("G") || ({"Yes":"Booked","N/A – host":"Staying with friends"}[val("Itinerary","M"+r)] || "To book"),
                payment:H("J"), ref:H("K"), cancel:H("L"), contact:H("M"), notes:H("N") }
     });

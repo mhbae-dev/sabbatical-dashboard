@@ -76,6 +76,8 @@
   <section class="panel" role="tabpanel" id="p-daily" aria-labelledby="tab-daily" hidden>
     <div class="day-nav" id="day-nav"></div>
     <div class="payback" id="payback" aria-live="polite" hidden></div>
+    <div class="unlogged" id="unlogged" aria-live="polite" hidden></div>
+    <section class="card wrapup" id="wrapup" hidden></section>
     <section class="card tonight" id="tonight" aria-label="Where you're staying"></section>
     <div class="day-grid">
       <section class="card day-main" aria-label="Today's budget">
@@ -116,6 +118,10 @@
       </section>
     </div>
     <div class="food-top" id="trip-stats"></div>
+    <div class="day-grid">
+      <section class="card" id="todo-card" hidden></section>
+      <section class="card" id="wallet"></section>
+    </div>
     <section class="card" aria-labelledby="h-dchart">
       <div class="card-head"><h2 id="h-dchart">Daily budget vs what you spent</h2><span class="sub">Green line = daily budget, after rolling over within each stay · dashed = original plan · bars = logged spending · tap a day to open it</span></div>
       <div id="daily-chart-wrap" style="min-width:0"></div>

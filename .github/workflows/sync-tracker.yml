@@ -1,11 +1,13 @@
 name: Sync spend log to Tracker
 
 # Runs whenever spend-log.json changes on main (e.g. a spend logged from the
-# Daily tab) and keeps the Tracker sheet of the spreadsheet in step with it.
+# Daily tab), or the spreadsheet is pushed from the Mac (push.sh keeps your copy
+# of it on a clash), and keeps the Tracker sheet of the spreadsheet in step with
+# the log. Also merges hand-typed Tracker rows that duplicate a logged spend.
 on:
   push:
     branches: [main]
-    paths: [spend-log.json]
+    paths: [spend-log.json, Sabbatical_Plan_and_Budget.xlsx]
   workflow_dispatch:
 
 permissions:

@@ -54,6 +54,24 @@ Every spend type you pick when logging belongs to exactly one line on the Budget
 
 Hotel, Flight and Visa & admin spends count towards their Budget line and Committed, but don't come out of the day's "left to spend". It also shows how much of it is left. Add what you spend with **Log a spend**. Amounts in local currency are converted to £ with the rates under *Exchange rates*.
 
+### Days with nothing logged
+A past day with nothing logged is counted at plan (not £0) until you either add its spends or tap **Nothing spent** in the yellow box at the top of the Daily tab. That way a forgotten day never inflates the treat fund. These days show a **?** on the chart.
+
+### Duplicates
+The budget counts every spend once:
+- A row you type into the Tracker that matches a spend logged on the phone (same Budget line and amount within 1%; same date for Food, Local transport, Activities and Shopping & misc, or within 7 days for Accommodation, Flights, Trains & intercity and Insurance & admin; for those four, any date if it's the only typed row and the only logged spend with that amount) is treated as the same spend. The dashboard counts it once straight away, and the next Tracker sync merges the two rows (the log entry takes over the row).
+- Logging something on the phone that matches a spend already logged for that day (same amount in £, or same amount in the same currency), or a hotel, flight, train or admin cost already typed into the Tracker, asks you to tap **Add** a second time. Repeats already in the log are flagged in the day's list so you can delete one.
+
+### Trains & intercity
+Trains, coaches and airport trains between places have their own Budget line (Itinerary column P), outside the daily budget like Flights. Log them with 🚄 **Train / coach**.
+
+### To book & do, cash wallet, stay wrap-up
+- **To book & do** lists checklist items and flights still to book, by due date (from texts like "Before 11 Nov", "Early Nov", "Within 3 days of 26 Nov"). Ticking one on the phone is saved in the log; to tick it for good, put anything in the checklist's *Done?* column.
+- **Cash wallet**: add cash withdrawals (🏧 Withdrew) and correct the balance after counting (Counted). Spends paid in cash come off automatically. It warns you two days before you leave a currency with cash left.
+- On the first two days of a stay, a **wrapped up** card sums up the stay before.
+
+These records (nothing-spent days, cash, ticked tasks) are saved in `spend-log.json` too, with `cat` set to `noSpend`, `cashin`, `cashcount` or `taskDone`. They're never counted as spending.
+
 ### Rolling budget and treat fund
 
 - **Each stay is one pot.** A day's budget is what's left in the stay's pot divided by the nights left there, so spending less today raises the next days and overspending lowers them. It never drops below 60% of the planned day (`FLOOR` in app.js).
@@ -100,3 +118,6 @@ On a **public** repository, anyone with the link can see the page *and* download
 ## What the page expects from the spreadsheet
 
 It reads the tab names and columns as they are now: Overview (budget in B3), Itinerary, Hotels, Flights, Admin & checklist and Tracker. You can add or remove stops, flights or spending rows freely, as long as each table still ends with its **Total** row (Tracker has no Total row; its column J holds the Log ID). Renaming a tab or moving columns will need a matching change in `app.js` (`parseWorkbook`).
+
+## Pushing changes from the Mac
+Run `./push.sh "what you changed"`. It commits, pulls and pushes. If the phone logged spends meanwhile, your spreadsheet wins and GitHub rebuilds the phone's Tracker rows a minute later, so you never get a merge error.

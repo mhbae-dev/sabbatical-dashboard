@@ -132,15 +132,16 @@
   {
    "id": "mvhbcrzpy1g5",
    "date": "2026-10-22",
-   "cat": "transport",
-   "kind": "transport",
+   "cat": "rail",
+   "kind": "train",
    "pay": "cash",
    "amount": 23.25,
    "currency": "GBP",
    "gbp": 23.25,
    "rate": 1,
    "note": "Narita Express",
-   "ts": "2026-10-20T23:27:39.445Z"
+   "ts": "2026-10-20T23:27:39.445Z",
+   "edited": "2026-10-21T09:00:00.000Z"
   },
   {
    "id": "mvhn4eivoe6v",
