@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T22:15:07.480Z",
+ "updated": "2026-10-21T23:25:53.027Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -255,6 +255,19 @@
    "rate": 1,
    "note": "Running Flask",
    "ts": "2026-10-21T12:56:05.706Z"
+  },
+  {
+   "id": "mviqqaspbcyd",
+   "date": "2026-10-22",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 2.96,
+   "currency": "GBP",
+   "gbp": 2.96,
+   "rate": 1,
+   "note": "TMoney",
+   "ts": "2026-10-21T23:25:50.761Z"
   }
  ]
 }
