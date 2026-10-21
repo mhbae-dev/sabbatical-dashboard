@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T12:55:22.376Z",
+ "updated": "2026-10-21T12:56:09.420Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -242,6 +242,19 @@
    "note": "Olive Young",
    "ts": "2026-10-21T12:54:40.750Z",
    "edited": "2026-10-21T12:55:21.355Z"
+  },
+  {
+   "id": "mvi48fnuf6v2",
+   "date": "2026-10-21",
+   "cat": "other",
+   "kind": "activities",
+   "pay": "card",
+   "amount": 13.57,
+   "currency": "GBP",
+   "gbp": 13.57,
+   "rate": 1,
+   "note": "Running Flask",
+   "ts": "2026-10-21T12:56:05.706Z"
   }
  ]
 }
