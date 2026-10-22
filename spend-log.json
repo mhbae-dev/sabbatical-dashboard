@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T23:25:53.027Z",
+ "updated": "2026-10-22T01:20:54.943Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -268,6 +268,20 @@
    "rate": 1,
    "note": "TMoney",
    "ts": "2026-10-21T23:25:50.761Z"
+  },
+  {
+   "id": "mviuu7x13v7m",
+   "date": "2026-10-22",
+   "cat": "shop",
+   "kind": "misc",
+   "pay": "card",
+   "amount": 20.55,
+   "currency": "GBP",
+   "gbp": 20.55,
+   "rate": 1,
+   "note": "Airport Lounge",
+   "ts": "2026-10-22T01:20:52.117Z",
+   "fund": "spread"
   }
  ]
 }
