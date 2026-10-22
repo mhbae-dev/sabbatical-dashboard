@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21T00:00:00.000Z",
+ "updated": "2026-10-22T01:22:29.243Z",
  "items": [
   {
    "id": "w1",
@@ -13,7 +13,7 @@
    "id": "w2",
    "title": "Apple AirPods 3",
    "note": "",
-   "done": false,
+   "done": true,
    "order": 2,
    "added": "2026-10-21T00:00:00.000Z"
   },
