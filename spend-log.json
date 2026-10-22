@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T11:02:27.056Z",
+ "updated": "2026-10-22T11:29:22.600Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -308,6 +308,19 @@
    "rate": 1,
    "note": "",
    "ts": "2026-10-22T11:02:26.228Z"
+  },
+  {
+   "id": "mvjgkqsnzjqx",
+   "date": "2026-10-22",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 4.27,
+   "currency": "GBP",
+   "gbp": 4.27,
+   "rate": 1,
+   "note": "Fruit sando",
+   "ts": "2026-10-22T11:29:21.575Z"
   }
  ]
 }
