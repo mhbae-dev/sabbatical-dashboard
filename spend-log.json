@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T11:35:06.542Z",
+ "updated": "2026-10-22T23:02:01.734Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -334,6 +334,19 @@
    "rate": 1,
    "note": "Family Mart",
    "ts": "2026-10-22T11:35:05.963Z"
+  },
+  {
+   "id": "mvk5bhfpd7p3",
+   "date": "2026-10-23",
+   "cat": "food",
+   "kind": "coffee",
+   "pay": "card",
+   "amount": 2.87,
+   "currency": "GBP",
+   "gbp": 2.87,
+   "rate": 1,
+   "note": "Minato Coffee",
+   "ts": "2026-10-22T23:01:59.941Z"
   }
  ]
 }
