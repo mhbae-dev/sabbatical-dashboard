@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T01:20:54.943Z",
+ "updated": "2026-10-22T07:29:56.690Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -282,6 +282,19 @@
    "note": "Airport Lounge",
    "ts": "2026-10-22T01:20:52.117Z",
    "fund": "spread"
+  },
+  {
+   "id": "mvj80u63qq2m",
+   "date": "2026-10-22",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 4.74,
+   "currency": "GBP",
+   "gbp": 4.74,
+   "rate": 1,
+   "note": "Suica card",
+   "ts": "2026-10-22T07:29:55.899Z"
   }
  ]
 }
