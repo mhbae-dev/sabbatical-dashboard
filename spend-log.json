@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T11:29:22.600Z",
+ "updated": "2026-10-22T11:35:06.542Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -321,6 +321,19 @@
    "rate": 1,
    "note": "Fruit sando",
    "ts": "2026-10-22T11:29:21.575Z"
+  },
+  {
+   "id": "mvjgs4ix5h8f",
+   "date": "2026-10-22",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 3.32,
+   "currency": "GBP",
+   "gbp": 3.32,
+   "rate": 1,
+   "note": "Family Mart",
+   "ts": "2026-10-22T11:35:05.963Z"
   }
  ]
 }
