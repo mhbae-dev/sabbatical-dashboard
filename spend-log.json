@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T03:18:07.452Z",
+ "updated": "2026-10-23T05:25:52.131Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -399,6 +399,20 @@
    "rate": 1,
    "note": "Cold Medicine",
    "ts": "2026-10-23T03:18:06.734Z",
+   "fund": "spread"
+  },
+  {
+   "id": "mvkj13sckg46",
+   "date": "2026-10-23",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 47.8,
+   "currency": "GBP",
+   "gbp": 47.8,
+   "rate": 1,
+   "note": "Cash Withdrawral",
+   "ts": "2026-10-23T05:25:50.316Z",
    "fund": "spread"
   }
  ]
