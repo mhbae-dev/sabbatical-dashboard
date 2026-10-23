@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T03:17:44.327Z",
+ "updated": "2026-10-23T03:18:07.452Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -386,6 +386,20 @@
    "rate": 1,
    "note": "BlueBottle",
    "ts": "2026-10-23T03:17:43.885Z"
+  },
+  {
+   "id": "mvkeguj2z73p",
+   "date": "2026-10-23",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 10.41,
+   "currency": "GBP",
+   "gbp": 10.41,
+   "rate": 1,
+   "note": "Cold Medicine",
+   "ts": "2026-10-23T03:18:06.734Z",
+   "fund": "spread"
   }
  ]
 }
