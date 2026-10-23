@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T23:02:01.734Z",
+ "updated": "2026-10-23T01:22:24.708Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -347,6 +347,19 @@
    "rate": 1,
    "note": "Minato Coffee",
    "ts": "2026-10-22T23:01:59.941Z"
+  },
+  {
+   "id": "mvkac1o05k6k",
+   "date": "2026-10-23",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 3.13,
+   "currency": "GBP",
+   "gbp": 3.13,
+   "rate": 1,
+   "note": "Breakfast",
+   "ts": "2026-10-23T01:22:24.240Z"
   }
  ]
 }
