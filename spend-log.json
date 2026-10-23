@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T07:19:24.776Z",
+ "updated": "2026-10-23T07:20:45.681Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -428,6 +428,19 @@
    "rate": 1,
    "note": "Water",
    "ts": "2026-10-23T07:19:24.192Z"
+  },
+  {
+   "id": "mvkn4vup9dx4",
+   "date": "2026-10-23",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 1.31,
+   "currency": "GBP",
+   "gbp": 1.31,
+   "rate": 1,
+   "note": "Sparking Water",
+   "ts": "2026-10-23T07:20:45.121Z"
   }
  ]
 }
