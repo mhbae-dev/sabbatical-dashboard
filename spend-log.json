@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T05:27:15.595Z",
+ "updated": "2026-10-23T07:19:24.776Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -415,6 +415,19 @@
    "ts": "2026-10-23T05:25:50.316Z",
    "fund": "spread",
    "edited": "2026-10-23T05:26:08.196Z"
+  },
+  {
+   "id": "mvkn35eorct4",
+   "date": "2026-10-23",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 0.72,
+   "currency": "GBP",
+   "gbp": 0.72,
+   "rate": 1,
+   "note": "Water",
+   "ts": "2026-10-23T07:19:24.192Z"
   }
  ]
 }
