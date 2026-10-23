@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T07:21:35.033Z",
+ "updated": "2026-10-23T13:45:06.103Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -454,6 +454,19 @@
    "rate": 1,
    "note": "Hotel Room Upgrade",
    "ts": "2026-10-23T07:21:34.494Z"
+  },
+  {
+   "id": "mvl0v5eoak5a",
+   "date": "2026-10-23",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 4.78,
+   "currency": "GBP",
+   "gbp": 4.78,
+   "rate": 1,
+   "note": "FruitSando",
+   "ts": "2026-10-23T13:45:05.569Z"
   }
  ]
 }
