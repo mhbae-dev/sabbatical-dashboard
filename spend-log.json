@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T01:23:16.230Z",
+ "updated": "2026-10-23T03:17:44.327Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -373,6 +373,19 @@
    "rate": 1,
    "note": "FamilyMart",
    "ts": "2026-10-23T01:23:15.563Z"
+  },
+  {
+   "id": "mvkegcwdgs40",
+   "date": "2026-10-23",
+   "cat": "food",
+   "kind": "coffee",
+   "pay": "card",
+   "amount": 3.3,
+   "currency": "GBP",
+   "gbp": 3.3,
+   "rate": 1,
+   "note": "BlueBottle",
+   "ts": "2026-10-23T03:17:43.885Z"
   }
  ]
 }
