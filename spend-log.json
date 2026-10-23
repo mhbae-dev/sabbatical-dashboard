@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T07:20:45.681Z",
+ "updated": "2026-10-23T07:21:35.033Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -441,6 +441,19 @@
    "rate": 1,
    "note": "Sparking Water",
    "ts": "2026-10-23T07:20:45.121Z"
+  },
+  {
+   "id": "mvkn5xy6zbhd",
+   "date": "2026-10-23",
+   "cat": "accom",
+   "kind": "hotel",
+   "pay": "card",
+   "amount": 14.34,
+   "currency": "GBP",
+   "gbp": 14.34,
+   "rate": 1,
+   "note": "Hotel Room Upgrade",
+   "ts": "2026-10-23T07:21:34.494Z"
   }
  ]
 }
