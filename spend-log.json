@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T13:45:06.103Z",
+ "updated": "2026-10-24T04:07:33.903Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -467,6 +467,19 @@
    "rate": 1,
    "note": "FruitSando",
    "ts": "2026-10-23T13:45:05.569Z"
+  },
+  {
+   "id": "mvlvo9wf8yrp",
+   "date": "2026-10-24",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 3.66,
+   "currency": "GBP",
+   "gbp": 3.66,
+   "rate": 1,
+   "note": "7Eleven",
+   "ts": "2026-10-24T04:07:32.896Z"
   }
  ]
 }
