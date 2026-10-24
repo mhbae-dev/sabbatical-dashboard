@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-24T04:07:33.903Z",
+ "updated": "2026-10-24T04:08:10.478Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -480,6 +480,19 @@
    "rate": 1,
    "note": "7Eleven",
    "ts": "2026-10-24T04:07:32.896Z"
+  },
+  {
+   "id": "mvlvp23ue9yu",
+   "date": "2026-10-24",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 30.86,
+   "currency": "GBP",
+   "gbp": 30.86,
+   "rate": 1,
+   "note": "Lunch",
+   "ts": "2026-10-24T04:08:09.450Z"
   }
  ]
 }
