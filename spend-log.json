@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-24T10:02:58.480Z",
+ "updated": "2026-10-25T21:11:25.638Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -506,6 +506,19 @@
    "rate": 1,
    "note": "UniCoffee",
    "ts": "2026-10-24T10:02:56.562Z"
+  },
+  {
+   "id": "mvobotwjc34i",
+   "date": "2026-10-25",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 8.02,
+   "currency": "GBP",
+   "gbp": 8.02,
+   "rate": 1,
+   "note": "FamilyMart",
+   "ts": "2026-10-25T21:11:25.029Z"
   }
  ]
 }
