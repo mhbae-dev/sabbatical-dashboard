@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-25T21:11:25.638Z",
+ "updated": "2026-10-25T21:13:49.611Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -519,6 +519,19 @@
    "rate": 1,
    "note": "FamilyMart",
    "ts": "2026-10-25T21:11:25.029Z"
+  },
+  {
+   "id": "mvobrx1nu2md",
+   "date": "2026-10-25",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 3.8,
+   "currency": "GBP",
+   "gbp": 3.8,
+   "rate": 1,
+   "note": "Breakfast",
+   "ts": "2026-10-25T21:13:49.067Z"
   }
  ]
 }
