@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-26T09:43:13.629Z",
+ "updated": "2026-10-26T09:43:26.012Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -649,6 +649,19 @@
    "rate": 1,
    "note": "Massage",
    "ts": "2026-10-26T09:43:13.054Z"
+  },
+  {
+   "id": "mvp2jx2345u8",
+   "date": "2026-10-26",
+   "cat": "food",
+   "kind": "coffee",
+   "pay": "card",
+   "amount": 8.44,
+   "currency": "GBP",
+   "gbp": 8.44,
+   "rate": 1,
+   "note": "Coffee",
+   "ts": "2026-10-26T09:43:25.467Z"
   }
  ]
 }
