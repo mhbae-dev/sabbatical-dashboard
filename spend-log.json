@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-25T23:03:39.048Z",
+ "updated": "2026-10-26T02:24:02.510Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -571,6 +571,19 @@
    "rate": 1,
    "note": "",
    "ts": "2026-10-25T23:03:37.726Z"
+  },
+  {
+   "id": "mvomuuhyk5fd",
+   "date": "2026-10-26",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 4.8,
+   "currency": "GBP",
+   "gbp": 4.8,
+   "rate": 1,
+   "note": "Suica",
+   "ts": "2026-10-26T02:24:01.511Z"
   }
  ]
 }
