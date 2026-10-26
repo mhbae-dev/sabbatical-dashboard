@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-26T04:32:12.708Z",
+ "updated": "2026-10-26T04:32:40.294Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -597,6 +597,19 @@
    "rate": 1,
    "note": "PepperLunch",
    "ts": "2026-10-26T04:32:11.630Z"
+  },
+  {
+   "id": "mvorg9hzr81p",
+   "date": "2026-10-26",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 3.09,
+   "currency": "GBP",
+   "gbp": 3.09,
+   "rate": 1,
+   "note": "Muscle relaxant",
+   "ts": "2026-10-26T04:32:39.191Z"
   }
  ]
 }
