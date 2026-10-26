@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-26T05:20:07.508Z",
+ "updated": "2026-10-26T09:43:13.629Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -636,6 +636,19 @@
    "rate": 1,
    "note": "",
    "ts": "2026-10-26T05:20:06.593Z"
+  },
+  {
+   "id": "mvp2jnha09zo",
+   "date": "2026-10-26",
+   "cat": "other",
+   "kind": "activities",
+   "pay": "card",
+   "amount": 21.1,
+   "currency": "GBP",
+   "gbp": 21.1,
+   "rate": 1,
+   "note": "Massage",
+   "ts": "2026-10-26T09:43:13.054Z"
   }
  ]
 }
