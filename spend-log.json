@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-26T04:32:40.294Z",
+ "updated": "2026-10-26T04:32:57.379Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -610,6 +610,19 @@
    "rate": 1,
    "note": "Muscle relaxant",
    "ts": "2026-10-26T04:32:39.191Z"
+  },
+  {
+   "id": "mvorgmpvwsbp",
+   "date": "2026-10-26",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 0.66,
+   "currency": "GBP",
+   "gbp": 0.66,
+   "rate": 1,
+   "note": "Drink",
+   "ts": "2026-10-26T04:32:56.323Z"
   }
  ]
 }
