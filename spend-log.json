@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-27T03:46:15.237Z",
+ "updated": "2026-10-27T05:51:33.099Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -727,6 +727,19 @@
    "rate": 1,
    "note": "Suica",
    "ts": "2026-10-27T03:46:14.213Z"
+  },
+  {
+   "id": "mvq9pk4z04zk",
+   "date": "2026-10-27",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 26.35,
+   "currency": "GBP",
+   "gbp": 26.35,
+   "rate": 1,
+   "note": "Sukiyaki",
+   "ts": "2026-10-27T05:51:32.147Z"
   }
  ]
 }
