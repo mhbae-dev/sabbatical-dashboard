@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-27T05:51:33.099Z",
+ "updated": "2026-10-27T09:16:46.973Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -740,6 +740,20 @@
    "rate": 1,
    "note": "Sukiyaki",
    "ts": "2026-10-27T05:51:32.147Z"
+  },
+  {
+   "id": "mvqh1hkkl4av",
+   "date": "2026-10-27",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 18.11,
+   "currency": "GBP",
+   "gbp": 18.11,
+   "rate": 1,
+   "note": "Travel Adapter",
+   "ts": "2026-10-27T09:16:46.005Z",
+   "fund": "spread"
   }
  ]
 }
