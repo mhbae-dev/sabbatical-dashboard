@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-27T09:16:46.973Z",
+ "updated": "2026-10-27T09:46:43.899Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -754,6 +754,19 @@
    "note": "Travel Adapter",
    "ts": "2026-10-27T09:16:46.005Z",
    "fund": "spread"
+  },
+  {
+   "id": "mvqi40fs2t9j",
+   "date": "2026-10-27",
+   "cat": "rail",
+   "kind": "train",
+   "pay": "card",
+   "amount": 49.81,
+   "currency": "GBP",
+   "gbp": 49.81,
+   "rate": 1,
+   "note": "Train to Nagoya",
+   "ts": "2026-10-27T09:46:43.386Z"
   }
  ]
 }
