@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-27T01:33:57.452Z",
+ "updated": "2026-10-27T03:46:15.237Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -714,6 +714,19 @@
    "rate": 1,
    "note": "Minato coffee",
    "ts": "2026-10-27T01:33:56.604Z"
+  },
+  {
+   "id": "mvq58f9gkxdi",
+   "date": "2026-10-27",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 4.75,
+   "currency": "GBP",
+   "gbp": 4.75,
+   "rate": 1,
+   "note": "Suica",
+   "ts": "2026-10-27T03:46:14.213Z"
   }
  ]
 }
