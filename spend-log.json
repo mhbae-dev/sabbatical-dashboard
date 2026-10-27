@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-27T09:46:43.899Z",
+ "updated": "2026-10-27T11:40:57.460Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -767,6 +767,19 @@
    "rate": 1,
    "note": "Train to Nagoya",
    "ts": "2026-10-27T09:46:43.386Z"
+  },
+  {
+   "id": "mvqm6w73ktqo",
+   "date": "2026-10-27",
+   "cat": "food",
+   "kind": "drinks",
+   "pay": "card",
+   "amount": 2.24,
+   "currency": "GBP",
+   "gbp": 2.24,
+   "rate": 1,
+   "note": "Beer",
+   "ts": "2026-10-27T11:40:56.320Z"
   }
  ]
 }
