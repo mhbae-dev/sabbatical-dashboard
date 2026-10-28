@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T09:41:47.836Z",
+ "updated": "2026-10-28T12:35:41.405Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -910,6 +910,19 @@
    "rate": 1,
    "note": "Cold medicine",
    "ts": "2026-10-28T09:41:46.918Z"
+  },
+  {
+   "id": "mvs3l53uys9n",
+   "date": "2026-10-28",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 1.62,
+   "currency": "GBP",
+   "gbp": 1.62,
+   "rate": 1,
+   "note": "FamilyMart",
+   "ts": "2026-10-28T12:35:40.698Z"
   }
  ]
 }
