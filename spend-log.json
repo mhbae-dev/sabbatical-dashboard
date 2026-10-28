@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T09:40:51.091Z",
+ "updated": "2026-10-28T09:41:16.596Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -884,6 +884,19 @@
    "rate": 1,
    "note": "Train to Takayama",
    "ts": "2026-10-28T09:40:49.968Z"
+  },
+  {
+   "id": "mvrxcu95rxhk",
+   "date": "2026-10-28",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 18.76,
+   "currency": "GBP",
+   "gbp": 18.76,
+   "rate": 1,
+   "note": "Gyukatsu",
+   "ts": "2026-10-28T09:41:15.689Z"
   }
  ]
 }
