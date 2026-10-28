@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T07:06:53.492Z",
+ "updated": "2026-10-28T09:40:51.091Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -871,6 +871,19 @@
    "rate": 1,
    "note": "Matcha",
    "ts": "2026-10-28T07:06:52.227Z"
+  },
+  {
+   "id": "mvrxcaeo5hbb",
+   "date": "2026-10-28",
+   "cat": "rail",
+   "kind": "train",
+   "pay": "card",
+   "amount": 32.51,
+   "currency": "GBP",
+   "gbp": 32.51,
+   "rate": 1,
+   "note": "Train to Takayama",
+   "ts": "2026-10-28T09:40:49.968Z"
   }
  ]
 }
