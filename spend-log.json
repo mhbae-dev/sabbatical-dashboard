@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T05:34:45.478Z",
+ "updated": "2026-10-28T05:35:00.641Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -819,6 +819,19 @@
    "rate": 1,
    "note": "Starbucks",
    "ts": "2026-10-28T05:34:44.950Z"
+  },
+  {
+   "id": "mvrok5bxmjgs",
+   "date": "2026-10-28",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 3.05,
+   "currency": "GBP",
+   "gbp": 3.05,
+   "rate": 1,
+   "note": "Breakfast",
+   "ts": "2026-10-28T05:35:00.093Z"
   }
  ]
 }
