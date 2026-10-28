@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T09:41:16.596Z",
+ "updated": "2026-10-28T09:41:47.836Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -897,6 +897,19 @@
    "rate": 1,
    "note": "Gyukatsu",
    "ts": "2026-10-28T09:41:15.689Z"
+  },
+  {
+   "id": "mvrxdicmalfm",
+   "date": "2026-10-28",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 6.73,
+   "currency": "GBP",
+   "gbp": 6.73,
+   "rate": 1,
+   "note": "Cold medicine",
+   "ts": "2026-10-28T09:41:46.918Z"
   }
  ]
 }
