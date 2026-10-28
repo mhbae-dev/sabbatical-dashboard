@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T06:32:17.435Z",
+ "updated": "2026-10-28T07:06:53.492Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -858,6 +858,19 @@
    "rate": 1,
    "note": "Nagoya Castle",
    "ts": "2026-10-28T06:32:16.347Z"
+  },
+  {
+   "id": "mvrruaiq60mu",
+   "date": "2026-10-28",
+   "cat": "food",
+   "kind": "coffee",
+   "pay": "card",
+   "amount": 5.73,
+   "currency": "GBP",
+   "gbp": 5.73,
+   "rate": 1,
+   "note": "Matcha",
+   "ts": "2026-10-28T07:06:52.227Z"
   }
  ]
 }
