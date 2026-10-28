@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T12:35:50.641Z",
+ "updated": "2026-10-28T12:44:52.568Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -936,6 +936,19 @@
    "rate": 1,
    "note": "Drinks",
    "ts": "2026-10-28T12:35:49.882Z"
+  },
+  {
+   "id": "mvs3wxzfeytn",
+   "date": "2026-10-28",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 4.36,
+   "currency": "GBP",
+   "gbp": 4.36,
+   "rate": 1,
+   "note": "Takoyaki",
+   "ts": "2026-10-28T12:44:51.339Z"
   }
  ]
 }
