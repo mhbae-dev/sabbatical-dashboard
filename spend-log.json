@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-27T11:41:18.176Z",
+ "updated": "2026-10-28T05:34:23.878Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -793,6 +793,19 @@
    "rate": 1,
    "note": "Mcdonalds",
    "ts": "2026-10-27T11:41:17.073Z"
+  },
+  {
+   "id": "mvrojcxp41da",
+   "date": "2026-10-28",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 6.66,
+   "currency": "GBP",
+   "gbp": 6.66,
+   "rate": 1,
+   "note": "Bento",
+   "ts": "2026-10-28T05:34:23.295Z"
   }
  ]
 }
