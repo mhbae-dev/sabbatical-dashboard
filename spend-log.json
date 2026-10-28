@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T05:35:13.126Z",
+ "updated": "2026-10-28T06:32:17.435Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -845,6 +845,19 @@
    "rate": 1,
    "note": "Beer",
    "ts": "2026-10-28T05:35:12.556Z"
+  },
+  {
+   "id": "mvrqlsrej9n4",
+   "date": "2026-10-28",
+   "cat": "other",
+   "kind": "activities",
+   "pay": "card",
+   "amount": 4.78,
+   "currency": "GBP",
+   "gbp": 4.78,
+   "rate": 1,
+   "note": "Nagoya Castle",
+   "ts": "2026-10-28T06:32:16.347Z"
   }
  ]
 }
