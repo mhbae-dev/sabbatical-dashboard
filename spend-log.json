@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-29T02:48:22.032Z",
+ "updated": "2026-10-29T08:50:06.490Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -962,6 +962,19 @@
    "rate": 1,
    "note": "Eel!",
    "ts": "2026-10-29T02:48:20.775Z"
+  },
+  {
+   "id": "mvtayw8oya7i",
+   "date": "2026-10-29",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 9.56,
+   "currency": "GBP",
+   "gbp": 9.56,
+   "rate": 1,
+   "note": "Suica topup",
+   "ts": "2026-10-29T08:50:05.880Z"
   }
  ]
 }
