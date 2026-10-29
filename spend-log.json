@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-29T08:50:06.490Z",
+ "updated": "2026-10-29T08:50:17.183Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -975,6 +975,19 @@
    "rate": 1,
    "note": "Suica topup",
    "ts": "2026-10-29T08:50:05.880Z"
+  },
+  {
+   "id": "mvtaz4m6itj0",
+   "date": "2026-10-29",
+   "cat": "food",
+   "kind": "drinks",
+   "pay": "card",
+   "amount": 3.3,
+   "currency": "GBP",
+   "gbp": 3.3,
+   "rate": 1,
+   "note": "Matcha",
+   "ts": "2026-10-29T08:50:16.734Z"
   }
  ]
 }
