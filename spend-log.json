@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-30T04:40:20.852Z",
+ "updated": "2026-10-30T09:56:19.917Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1027,6 +1027,19 @@
    "rate": 1,
    "note": "Toyota Museum",
    "ts": "2026-10-30T04:40:19.430Z"
+  },
+  {
+   "id": "mvusrwvdzmlp",
+   "date": "2026-10-30",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 14.38,
+   "currency": "GBP",
+   "gbp": 14.38,
+   "rate": 1,
+   "note": "Lunch",
+   "ts": "2026-10-30T09:56:19.369Z"
   }
  ]
 }
