@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-30T09:56:51.582Z",
+ "updated": "2026-10-30T12:37:13.013Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1067,6 +1067,19 @@
    "note": "Umbrella",
    "ts": "2026-10-30T09:56:50.959Z",
    "fund": "spread"
+  },
+  {
+   "id": "mvuyit13niyl",
+   "date": "2026-10-30",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 25.75,
+   "currency": "GBP",
+   "gbp": 25.75,
+   "rate": 1,
+   "note": "Wine bar",
+   "ts": "2026-10-30T12:37:12.184Z"
   }
  ]
 }
