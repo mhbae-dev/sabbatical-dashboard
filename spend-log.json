@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-29T11:17:16.077Z",
+ "updated": "2026-10-30T04:40:20.852Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1014,6 +1014,19 @@
    "rate": 1,
    "note": "Pizza",
    "ts": "2026-10-29T11:17:15.518Z"
+  },
+  {
+   "id": "mvuhhjadqm9g",
+   "date": "2026-10-30",
+   "cat": "other",
+   "kind": "activities",
+   "pay": "card",
+   "amount": 4.78,
+   "currency": "GBP",
+   "gbp": 4.78,
+   "rate": 1,
+   "note": "Toyota Museum",
+   "ts": "2026-10-30T04:40:19.430Z"
   }
  ]
 }
