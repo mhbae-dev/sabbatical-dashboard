@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-30T09:56:34.601Z",
+ "updated": "2026-10-30T09:56:51.582Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1053,6 +1053,20 @@
    "rate": 1,
    "note": "Drink",
    "ts": "2026-10-30T09:56:34.161Z"
+  },
+  {
+   "id": "mvussl8v2y7i",
+   "date": "2026-10-30",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 10.4,
+   "currency": "GBP",
+   "gbp": 10.4,
+   "rate": 1,
+   "note": "Umbrella",
+   "ts": "2026-10-30T09:56:50.959Z",
+   "fund": "spread"
   }
  ]
 }
