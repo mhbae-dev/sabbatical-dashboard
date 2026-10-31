@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-31T12:15:55.620Z",
+ "updated": "2026-10-31T12:16:31.299Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1107,6 +1107,19 @@
    "rate": 1,
    "note": "Drinks",
    "ts": "2026-10-31T12:15:55.168Z"
+  },
+  {
+   "id": "mvwd81qp5s3a",
+   "date": "2026-10-31",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 8.71,
+   "currency": "GBP",
+   "gbp": 8.71,
+   "rate": 1,
+   "note": "Dinner",
+   "ts": "2026-10-31T12:16:30.674Z"
   }
  ]
 }
