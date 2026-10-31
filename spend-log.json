@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-30T14:41:33.302Z",
+ "updated": "2026-10-31T10:43:43.733Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1074,12 +1074,13 @@
    "cat": "food",
    "kind": "meals",
    "pay": "card",
-   "amount": 25.75,
+   "amount": 25.79,
    "currency": "GBP",
-   "gbp": 25.75,
+   "gbp": 25.79,
    "rate": 1,
    "note": "Wine bar",
-   "ts": "2026-10-30T12:37:12.184Z"
+   "ts": "2026-10-30T12:37:12.184Z",
+   "edited": "2026-10-31T10:43:43.257Z"
   },
   {
    "id": "mvv2ypmxaq7r",
