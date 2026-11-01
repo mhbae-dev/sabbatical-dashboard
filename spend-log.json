@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-01T03:50:28.260Z",
+ "updated": "2026-11-01T09:07:11.807Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1146,6 +1146,19 @@
    "rate": 1,
    "note": "Park Coffee",
    "ts": "2026-11-01T03:50:27.567Z"
+  },
+  {
+   "id": "mvxlwff5widt",
+   "date": "2026-11-01",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 1.04,
+   "currency": "GBP",
+   "gbp": 1.04,
+   "rate": 1,
+   "note": "Nail Clippers",
+   "ts": "2026-11-01T09:07:11.249Z"
   }
  ]
 }
