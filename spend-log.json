@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-31T12:16:31.299Z",
+ "updated": "2026-11-01T03:50:11.133Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1120,6 +1120,19 @@
    "rate": 1,
    "note": "Dinner",
    "ts": "2026-10-31T12:16:30.674Z"
+  },
+  {
+   "id": "mvxakqsct2vj",
+   "date": "2026-11-01",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 8.59,
+   "currency": "GBP",
+   "gbp": 8.59,
+   "rate": 1,
+   "note": "PastaRoom",
+   "ts": "2026-11-01T03:50:10.332Z"
   }
  ]
 }
