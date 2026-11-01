@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-01T09:07:11.807Z",
+ "updated": "2026-11-01T10:16:17.245Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1159,6 +1159,19 @@
    "rate": 1,
    "note": "Nail Clippers",
    "ts": "2026-11-01T09:07:11.249Z"
+  },
+  {
+   "id": "mvxoda4yqdkb",
+   "date": "2026-11-01",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 17.87,
+   "currency": "GBP",
+   "gbp": 17.87,
+   "rate": 1,
+   "note": "Dinner",
+   "ts": "2026-11-01T10:16:16.787Z"
   }
  ]
 }
