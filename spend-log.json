@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-01T03:50:11.133Z",
+ "updated": "2026-11-01T03:50:28.260Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1133,6 +1133,19 @@
    "rate": 1,
    "note": "PastaRoom",
    "ts": "2026-11-01T03:50:10.332Z"
+  },
+  {
+   "id": "mvxal433ngk4",
+   "date": "2026-11-01",
+   "cat": "food",
+   "kind": "coffee",
+   "pay": "card",
+   "amount": 2.39,
+   "currency": "GBP",
+   "gbp": 2.39,
+   "rate": 1,
+   "note": "Park Coffee",
+   "ts": "2026-11-01T03:50:27.567Z"
   }
  ]
 }
