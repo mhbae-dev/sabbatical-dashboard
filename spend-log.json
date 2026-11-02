@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-02T02:05:54.954Z",
+ "updated": "2026-11-02T02:31:17.040Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1180,6 +1180,19 @@
    "what": "Book Tam Coc resort + airport pickup, and Hanoi hotel",
    "date": "2026-11-02",
    "ts": "2026-11-02T02:05:53.908Z"
+  },
+  {
+   "id": "mvyn73xbizmz",
+   "date": "2026-11-02",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 10.84,
+   "currency": "GBP",
+   "gbp": 10.84,
+   "rate": 1,
+   "note": "Lunch",
+   "ts": "2026-11-02T02:31:15.359Z"
   }
  ]
 }
