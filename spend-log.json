@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-02T02:40:16.635Z",
+ "updated": "2026-11-02T06:14:25.750Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1206,6 +1206,19 @@
    "rate": 1,
    "note": "To Osaka",
    "ts": "2026-11-02T02:40:15.740Z"
+  },
+  {
+   "id": "mvyv63lwjd3b",
+   "date": "2026-11-02",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 10.73,
+   "currency": "GBP",
+   "gbp": 10.73,
+   "rate": 1,
+   "note": "Taxi",
+   "ts": "2026-11-02T06:14:25.220Z"
   }
  ]
 }
