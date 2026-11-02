@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-02T09:25:45.045Z",
+ "updated": "2026-11-02T09:25:57.292Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1227,6 +1227,19 @@
    "currency": "GBP",
    "amount": 47.7,
    "ts": "2026-11-02T09:24:47.048Z"
+  },
+  {
+   "id": "mvz20e424vpn",
+   "date": "2026-11-02",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 27.43,
+   "currency": "GBP",
+   "gbp": 27.43,
+   "rate": 1,
+   "note": "Dinner",
+   "ts": "2026-11-02T09:25:56.210Z"
   }
  ]
 }
