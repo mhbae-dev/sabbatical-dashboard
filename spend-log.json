@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-02T02:31:17.040Z",
+ "updated": "2026-11-02T02:40:16.635Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1193,6 +1193,19 @@
    "rate": 1,
    "note": "Lunch",
    "ts": "2026-11-02T02:31:15.359Z"
+  },
+  {
+   "id": "mvyniovv38yt",
+   "date": "2026-11-01",
+   "cat": "rail",
+   "kind": "train",
+   "pay": "card",
+   "amount": 38.93,
+   "currency": "GBP",
+   "gbp": 38.93,
+   "rate": 1,
+   "note": "To Osaka",
+   "ts": "2026-11-02T02:40:15.740Z"
   }
  ]
 }
