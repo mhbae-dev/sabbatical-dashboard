@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-02T06:14:25.750Z",
+ "updated": "2026-11-02T09:24:48.062Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1219,6 +1219,14 @@
    "rate": 1,
    "note": "Taxi",
    "ts": "2026-11-02T06:14:25.220Z"
+  },
+  {
+   "id": "mvz1ywquf9rb",
+   "cat": "cashin",
+   "date": "2026-11-02",
+   "currency": "GBP",
+   "amount": 47.7,
+   "ts": "2026-11-02T09:24:47.048Z"
   }
  ]
 }
