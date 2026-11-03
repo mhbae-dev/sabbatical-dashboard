@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-03T11:33:50.231Z",
+ "updated": "2026-11-03T11:34:12.088Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1279,6 +1279,19 @@
    "rate": 1,
    "note": "Snakcs",
    "ts": "2026-11-03T11:33:49.625Z"
+  },
+  {
+   "id": "mw0m16h8f39d",
+   "date": "2026-11-03",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 4.18,
+   "currency": "GBP",
+   "gbp": 4.18,
+   "rate": 1,
+   "note": "Matcha Tiramisu",
+   "ts": "2026-11-03T11:34:11.468Z"
   }
  ]
 }
