@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-04T03:38:19.438Z",
+ "updated": "2026-11-04T04:25:25.787Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1318,6 +1318,19 @@
    "rate": 1,
    "note": "Lawson",
    "ts": "2026-11-04T03:38:18.535Z"
+  },
+  {
+   "id": "mw1m5lsrlbar",
+   "date": "2026-11-04",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 2.26,
+   "currency": "GBP",
+   "gbp": 2.26,
+   "rate": 1,
+   "note": "Hida-Furakawa",
+   "ts": "2026-11-04T04:25:24.123Z"
   }
  ]
 }
