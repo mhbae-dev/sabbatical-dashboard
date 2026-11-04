@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-04T03:37:59.617Z",
+ "updated": "2026-11-04T03:38:19.438Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1305,6 +1305,19 @@
    "rate": 1,
    "note": "Morning coffee",
    "ts": "2026-11-04T03:37:58.401Z"
+  },
+  {
+   "id": "mw1kh1k7a82n",
+   "date": "2026-11-04",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 4.69,
+   "currency": "GBP",
+   "gbp": 4.69,
+   "rate": 1,
+   "note": "Lawson",
+   "ts": "2026-11-04T03:38:18.535Z"
   }
  ]
 }
