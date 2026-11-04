@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-23T03:26:40.445Z",
+ "updated": "2026-11-04T04:16:56.362Z",
  "items": [
   {
    "id": "w1",
@@ -64,6 +64,14 @@
    "done": false,
    "order": 8,
    "added": "2026-10-23T03:26:39.618Z"
+  },
+  {
+   "id": "mw1lupdg4zbw",
+   "title": "짭 Arcteryx beanie",
+   "note": "",
+   "done": false,
+   "order": 9,
+   "added": "2026-11-04T04:16:55.540Z"
   }
  ]
 }
