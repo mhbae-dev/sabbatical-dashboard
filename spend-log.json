@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-04T04:51:35.560Z",
+ "updated": "2026-11-04T06:05:38.284Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1344,6 +1344,19 @@
    "rate": 1,
    "note": "Fried Toast",
    "ts": "2026-11-04T04:51:34.514Z"
+  },
+  {
+   "id": "mw1pqhmi014w",
+   "date": "2026-11-04",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 12.83,
+   "currency": "GBP",
+   "gbp": 12.83,
+   "rate": 1,
+   "note": "Soba",
+   "ts": "2026-11-04T06:05:37.339Z"
   }
  ]
 }
