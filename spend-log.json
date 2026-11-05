@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-05T12:12:36.512Z",
+ "updated": "2026-11-05T13:16:16.956Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1404,6 +1404,19 @@
    "what": "Taiwan online arrival card",
    "date": "2026-11-05",
    "ts": "2026-11-05T12:12:35.896Z"
+  },
+  {
+   "id": "mw3kk5vmi8sc",
+   "date": "2026-11-05",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 12.51,
+   "currency": "GBP",
+   "gbp": 12.51,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-11-05T13:16:16.450Z"
   }
  ]
 }
