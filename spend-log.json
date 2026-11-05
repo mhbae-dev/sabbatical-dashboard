@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-05T03:08:02.586Z",
+ "updated": "2026-11-05T12:12:36.512Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1396,6 +1396,14 @@
    "rate": 1,
    "note": "Hida Gyu",
    "ts": "2026-11-05T03:08:01.390Z"
+  },
+  {
+   "id": "mw3ia9x23h4y",
+   "cat": "taskDone",
+   "key": "todo:Taiwan online arrival card",
+   "what": "Taiwan online arrival card",
+   "date": "2026-11-05",
+   "ts": "2026-11-05T12:12:35.896Z"
   }
  ]
 }
