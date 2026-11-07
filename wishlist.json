@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-07T06:18:08.438Z",
+ "updated": "2026-11-07T07:25:14.371Z",
  "items": [
   {
    "id": "w1",
@@ -109,7 +109,7 @@
    "id": "mw60g52yasx6",
    "title": "GShock",
    "note": "",
-   "done": false,
+   "done": true,
    "order": 14,
    "added": "2026-11-07T06:16:35.002Z"
   },
