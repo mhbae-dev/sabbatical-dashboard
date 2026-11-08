@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-07T07:25:14.371Z",
+ "updated": "2026-11-08T15:07:00.975Z",
  "items": [
   {
    "id": "w1",
@@ -101,7 +101,7 @@
    "id": "mw60g219opbo",
    "title": "Seiko Watch",
    "note": "",
-   "done": false,
+   "done": true,
    "order": 13,
    "added": "2026-11-07T06:16:31.053Z"
   },
