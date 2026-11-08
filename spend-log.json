@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-08T11:29:43.445Z",
+ "updated": "2026-11-08T12:27:57.708Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1601,6 +1601,19 @@
    "rate": 1,
    "note": "Omakase reservation fee",
    "ts": "2026-11-08T11:29:42.912Z"
+  },
+  {
+   "id": "mw7t5kbz8dfa",
+   "date": "2026-11-08",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 9.94,
+   "currency": "GBP",
+   "gbp": 9.94,
+   "rate": 1,
+   "note": "Dinner",
+   "ts": "2026-11-08T12:27:56.591Z"
   }
  ]
 }
