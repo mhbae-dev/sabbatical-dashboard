@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-08T08:44:04.861Z",
+ "updated": "2026-11-08T11:29:43.445Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1588,6 +1588,19 @@
    "rate": 1,
    "note": "Water",
    "ts": "2026-11-08T08:44:04.109Z"
+  },
+  {
+   "id": "mw7r2olcyyi4",
+   "date": "2026-11-08",
+   "cat": "shop",
+   "kind": "misc",
+   "pay": "card",
+   "amount": 2.1,
+   "currency": "GBP",
+   "gbp": 2.1,
+   "rate": 1,
+   "note": "Omakase reservation fee",
+   "ts": "2026-11-08T11:29:42.912Z"
   }
  ]
 }
