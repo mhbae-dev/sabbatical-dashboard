@@ -62,10 +62,12 @@ function build(doc){
     const cur = s.country==="Malaysia & Singapore" && /singapore/i.test(s.where) ? ["MYR","SGD"] : (COUNTRY_CUR[s.country]||[]);
     return {...s, st, cls, acc, food, total:acc+food+s.trans+s.act+s.misc+s.rail, meal, cur};
   });
-  const flights = d.flights.map(f=>({...f, booked:/^booked$/i.test(f.status||"")}));
+  // a leg whose Status mentions "cancel" (e.g. "Cancelling — £200 refund") is off the route but its cost (a refund) still counts
+  const allFlights = d.flights.map(f=>({...f, booked:/^booked$/i.test(f.status||""), cancelled:/cancel/i.test(f.status||"")}));
+  const flights = allFlights.filter(f=>!f.cancelled);
   const groups=[]; stops.forEach(s=>{ const g=groups[groups.length-1]; if(g&&g.country===s.country){g.nights+=s.nights;g.total+=s.total;g.food+=s.food;g.stops.push(s);} else groups.push({country:s.country,start:s.start,nights:s.nights,total:s.total,food:s.food,stops:[s]}); });
   const planned = {
-    "Flights": sum(flights,f=>f.cost), "Accommodation": sum(stops,s=>s.acc), "Food": sum(stops,s=>s.food),
+    "Flights": sum(allFlights,f=>f.cost), "Accommodation": sum(stops,s=>s.acc), "Food": sum(stops,s=>s.food),
     "Local transport": sum(stops,s=>s.trans), "Trains & intercity": sum(stops,s=>s.rail), "Activities": sum(stops,s=>s.act), "Shopping & misc": sum(stops,s=>s.misc), "Insurance & admin": sum(d.admin,a=>a.amt)
   };
   const LOG = logEntries();
@@ -86,7 +88,7 @@ function build(doc){
   const logTotal = sum(LOG,e=>e.gbp);
   const totalCommitted = sum(spend,s=>s.amt) + logTotal;
   const nights = sum(stops,s=>s.nights);
-  return {doc, d:{...d, spend}, dupRows, budget:d.budget, stops, flights, groups, planned, committed, other, totalPlan, totalCommitted,
+  return {doc, d:{...d, spend}, dupRows, budget:d.budget, stops, flights, allFlights, groups, planned, committed, other, totalPlan, totalCommitted,
     buffer:d.budget-totalPlan, nights, logTotal, logCount:LOG.length, ground:sum(stops,s=>s.total)};
 }
 
@@ -1064,12 +1066,12 @@ function renderFlights(M){
     {l:"Still to book",v:gbp(sum(toBook,f=>f.cost)),n:"Estimates",cls:""},
     {l:"Next flight",v:next?`${code(next.from)} → ${code(next.to)}`:"–",n:next?`${fmtD(next.date,{weekday:"short",day:"numeric",month:"short"})}${next.flight?" · "+esc(next.flight):""}`:"All flown"}
   ].map(x=>`<div class="kpi"><div class="eyebrow">${x.l}</div><div class="v">${x.v}</div><div class="n">${x.n}</div></div>`).join("");
-  const byB=[]; F.forEach(f=>{ const k=f.booking||"Other"; let g=byB.find(x=>x.k===k); if(!g){g={k,items:[]};byB.push(g);} g.items.push(f); });
+  const byB=[]; M.allFlights.forEach(f=>{ const k=f.booking||"Other"; let g=byB.find(x=>x.k===k); if(!g){g={k,items:[]};byB.push(g);} g.items.push(f); });
   $("flights").innerHTML = byB.map(g=>{
-    const tot = sum(g.items,f=>f.cost), allB = g.items.every(f=>f.booked);
+    const tot = sum(g.items,f=>f.cost), allB = g.items.every(f=>f.booked||f.cancelled);
     return `<div class="fgroup"><h3><span>${esc(g.k)}</span><span>${gbp(tot)}${allB?" · booked":""}</span></h3>` + g.items.map(f=>{
       const urgent = !f.booked && /this week|now|asap/i.test(f.by||"");
-      const chip = f.booked?'<span class="chip booked">Booked</span>':`<span class="chip ${urgent?"urgent":"todo"}">Book ${esc((f.by||"").replace(/^(Mid|Late)/,m=>"by "+m.toLowerCase()).replace(/^This/,"this").replace(/^After/,"after"))}</span>`;
+      const chip = f.cancelled?`<span class="chip todo">${esc(f.status)}</span>`:f.booked?'<span class="chip booked">Booked</span>':`<span class="chip ${urgent?"urgent":"todo"}">Book ${esc((f.by||"").replace(/^(Mid|Late)/,m=>"by "+m.toLowerCase()).replace(/^This/,"this").replace(/^After/,"after"))}</span>`;
       const times = [f.dep?`dep ${esc(f.dep)}`:"", f.arr?`arr ${esc(f.arr)}`:""].filter(Boolean).join(" · ");
       const meta = [f.flight?`<b>${esc(f.flight)}</b>`:"", times, f.ref?`Ref <span class="mono">${esc(f.ref)}</span>`:"", esc(f.notes||"")].filter(Boolean).join(" · ");
       return `<div class="flight${D(f.date)<today?" past":""}"><div class="when"><b>${fmtD(f.date)}</b>${fmtD(f.date,{weekday:"short"})} ${D(f.date).getFullYear()}</div>
