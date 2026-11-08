@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-08T08:43:03.814Z",
+ "updated": "2026-11-08T08:43:30.646Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1549,6 +1549,19 @@
    "rate": 1,
    "note": "",
    "ts": "2026-11-08T08:43:02.972Z"
+  },
+  {
+   "id": "mw7l4xi1w0o5",
+   "date": "2026-11-08",
+   "cat": "food",
+   "kind": "coffee",
+   "pay": "card",
+   "amount": 3.81,
+   "currency": "GBP",
+   "gbp": 3.81,
+   "rate": 1,
+   "note": "Osa Coffee Parks",
+   "ts": "2026-11-08T08:43:30.073Z"
   }
  ]
 }
