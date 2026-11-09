@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-09T08:10:05.892Z",
+ "updated": "2026-11-09T11:42:05.619Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1693,6 +1693,19 @@
    "rate": 1,
    "note": "Souvenier",
    "ts": "2026-11-09T08:10:05.069Z"
+  },
+  {
+   "id": "mw96yfvc8586",
+   "date": "2026-11-09",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 5.72,
+   "currency": "GBP",
+   "gbp": 5.72,
+   "rate": 1,
+   "note": "Sukiya",
+   "ts": "2026-11-09T11:42:05.017Z"
   }
  ]
 }
