@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-09T11:42:05.619Z",
+ "updated": "2026-11-09T11:42:22.617Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1706,6 +1706,19 @@
    "rate": 1,
    "note": "Sukiya",
    "ts": "2026-11-09T11:42:05.017Z"
+  },
+  {
+   "id": "mw96yszawbd3",
+   "date": "2026-11-09",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 2.7,
+   "currency": "GBP",
+   "gbp": 2.7,
+   "rate": 1,
+   "note": "Drink",
+   "ts": "2026-11-09T11:42:22.006Z"
   }
  ]
 }
