@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-08T15:07:38.698Z",
+ "updated": "2026-11-09T04:51:52.165Z",
  "items": [
   {
    "id": "w1",
@@ -53,7 +53,7 @@
    "id": "mvkdk7iu5599",
    "title": "Loafers",
    "note": "",
-   "done": false,
+   "done": true,
    "order": 7,
    "added": "2026-10-23T02:52:43.926Z"
   },
