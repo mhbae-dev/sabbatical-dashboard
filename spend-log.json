@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-09T00:35:39.833Z",
+ "updated": "2026-11-09T03:10:56.766Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1641,6 +1641,19 @@
    "note": "Post Parcel to Korea",
    "ts": "2026-11-09T00:35:39.292Z",
    "fund": "spread"
+  },
+  {
+   "id": "mw8op3ck9ego",
+   "date": "2026-11-09",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 9.54,
+   "currency": "GBP",
+   "gbp": 9.54,
+   "rate": 1,
+   "note": "Topup",
+   "ts": "2026-11-09T03:10:55.797Z"
   }
  ]
 }
