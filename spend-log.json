@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-10T09:58:27.858Z",
+ "updated": "2026-11-10T14:20:12.315Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1797,6 +1797,19 @@
    "rate": 1,
    "note": "Sushi Omakase",
    "ts": "2026-11-10T09:58:26.841Z"
+  },
+  {
+   "id": "mwas1mi6m6qq",
+   "date": "2026-11-10",
+   "cat": "food",
+   "kind": "groceries",
+   "pay": "card",
+   "amount": 3.5,
+   "currency": "GBP",
+   "gbp": 3.5,
+   "rate": 1,
+   "note": "Final snack",
+   "ts": "2026-11-10T14:20:11.694Z"
   }
  ]
 }
