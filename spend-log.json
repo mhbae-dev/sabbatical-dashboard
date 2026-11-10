@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-10T14:21:05.797Z",
+ "updated": "2026-11-10T14:26:04.689Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1836,6 +1836,14 @@
    "rate": 1,
    "note": "DonQ",
    "ts": "2026-11-10T14:21:03.840Z"
+  },
+  {
+   "id": "mwas95wzfzru",
+   "cat": "taskDone",
+   "key": "todo:Vietnam online declaration (check if required)",
+   "what": "Vietnam online declaration (check if required)",
+   "date": "2026-11-10",
+   "ts": "2026-11-10T14:26:03.443Z"
   }
  ]
 }
