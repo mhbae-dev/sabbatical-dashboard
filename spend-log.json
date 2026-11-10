@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-10T14:26:04.689Z",
+ "updated": "2026-11-10T14:31:06.853Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1844,6 +1844,19 @@
    "what": "Vietnam online declaration (check if required)",
    "date": "2026-11-10",
    "ts": "2026-11-10T14:26:03.443Z"
+  },
+  {
+   "id": "mwasfnlm0kdk",
+   "date": "2026-11-10",
+   "cat": "food",
+   "kind": "coffee",
+   "pay": "card",
+   "amount": 3.09,
+   "currency": "GBP",
+   "gbp": 3.09,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-11-10T14:31:06.300Z"
   }
  ]
 }
