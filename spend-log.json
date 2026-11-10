@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-10T14:20:43.490Z",
+ "updated": "2026-11-10T14:21:05.797Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1823,6 +1823,19 @@
    "rate": 1,
    "note": "Travel pouches",
    "ts": "2026-11-10T14:20:42.847Z"
+  },
+  {
+   "id": "mwas2qqobgm7",
+   "date": "2026-11-10",
+   "cat": "shop",
+   "kind": "shopping",
+   "pay": "card",
+   "amount": 29.28,
+   "currency": "GBP",
+   "gbp": 29.28,
+   "rate": 1,
+   "note": "DonQ",
+   "ts": "2026-11-10T14:21:03.840Z"
   }
  ]
 }
