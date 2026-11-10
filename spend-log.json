@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-10T14:20:12.315Z",
+ "updated": "2026-11-10T14:20:43.490Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1810,6 +1810,19 @@
    "rate": 1,
    "note": "Final snack",
    "ts": "2026-11-10T14:20:11.694Z"
+  },
+  {
+   "id": "mwas2ajjw1eq",
+   "date": "2026-11-10",
+   "cat": "shop",
+   "kind": "essentials",
+   "pay": "card",
+   "amount": 7.84,
+   "currency": "GBP",
+   "gbp": 7.84,
+   "rate": 1,
+   "note": "Travel pouches",
+   "ts": "2026-11-10T14:20:42.847Z"
   }
  ]
 }
