@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-11T00:05:24.061Z",
+ "updated": "2026-11-11T00:05:27.083Z",
  "items": [
   {
    "id": "w1",
@@ -133,7 +133,7 @@
    "id": "mwbcy6jycfj4",
    "title": "Electric shaver",
    "note": "",
-   "done": false,
+   "done": true,
    "order": 18,
    "added": "2026-11-11T00:05:22.990Z"
   }
