@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-09T10:48:43.498Z",
+ "updated": "2026-11-11T00:04:49.662Z",
  "items": [
   {
    "id": "w1",
@@ -117,7 +117,7 @@
    "id": "mw60i4iucjhr",
    "title": "Shiro Fragrance",
    "note": "",
-   "done": false,
+   "done": true,
    "order": 15,
    "added": "2026-11-07T06:18:07.590Z"
   },
@@ -133,7 +133,7 @@
    "id": "mw951mpnxwsy",
    "title": "shoe bag/pouch",
    "note": "",
-   "done": false,
+   "done": true,
    "order": 17,
    "added": "2026-11-09T10:48:34.619Z"
   },
