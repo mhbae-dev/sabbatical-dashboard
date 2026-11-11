@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-10T23:37:45.946Z",
+ "updated": "2026-11-11T09:41:08.929Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1883,6 +1883,20 @@
    "rate": 1,
    "note": "Plane snack",
    "ts": "2026-11-10T23:37:44.621Z"
+  },
+  {
+   "id": "mwbxilghe14y",
+   "date": "2026-11-11",
+   "cat": "shop",
+   "kind": "misc",
+   "pay": "card",
+   "amount": 61.06,
+   "currency": "GBP",
+   "gbp": 61.06,
+   "rate": 1,
+   "note": "Cash",
+   "ts": "2026-11-11T09:41:07.745Z",
+   "fund": "spread"
   }
  ]
 }
