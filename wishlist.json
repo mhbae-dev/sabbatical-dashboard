@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-11T00:04:59.282Z",
+ "updated": "2026-11-11T00:05:03.627Z",
  "items": [
   {
    "id": "w1",
@@ -15,14 +15,6 @@
    "note": "",
    "done": true,
    "order": 2,
-   "added": "2026-10-21T00:00:00.000Z"
-  },
-  {
-   "id": "w3",
-   "title": "Vintage Watch Japan",
-   "note": "",
-   "done": false,
-   "order": 3,
    "added": "2026-10-21T00:00:00.000Z"
   },
   {
