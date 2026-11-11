@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-11T00:04:52.788Z",
+ "updated": "2026-11-11T00:04:59.282Z",
  "items": [
   {
    "id": "w1",
@@ -29,7 +29,7 @@
    "id": "w4",
    "title": "Dress Shoes",
    "note": "",
-   "done": false,
+   "done": true,
    "order": 4,
    "added": "2026-10-21T00:00:00.000Z"
   },
