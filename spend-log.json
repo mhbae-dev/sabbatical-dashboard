@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-12T07:01:40.437Z",
+ "updated": "2026-11-12T07:02:00.895Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -1949,6 +1949,19 @@
    "rate": 1,
    "note": "",
    "ts": "2026-11-12T07:01:39.818Z"
+  },
+  {
+   "id": "mwd79t4wix7u",
+   "date": "2026-11-12",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 1.62,
+   "currency": "GBP",
+   "gbp": 1.62,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-11-12T07:02:00.128Z"
   }
  ]
 }
