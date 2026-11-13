@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-13T12:03:00.576Z",
+ "updated": "2026-11-13T14:25:33.452Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2077,6 +2077,19 @@
    "what": "Book HCMC stay (20–26 Nov)",
    "date": "2026-11-13",
    "ts": "2026-11-13T12:02:59.141Z"
+  },
+  {
+   "id": "mwf2k20dpb66",
+   "date": "2026-11-13",
+   "cat": "transport",
+   "kind": "transport",
+   "pay": "card",
+   "amount": 0.8,
+   "currency": "GBP",
+   "gbp": 0.8,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-11-13T14:25:32.462Z"
   }
  ]
 }
