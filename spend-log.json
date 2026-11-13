@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-13T08:25:43.135Z",
+ "updated": "2026-11-13T12:02:55.556Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2053,6 +2053,14 @@
    "rate": 1,
    "note": "",
    "ts": "2026-11-13T08:25:40.459Z"
+  },
+  {
+   "id": "mwexgmjq1r96",
+   "cat": "taskDone",
+   "key": "todo:Book Hanoi → HCMC (20 Nov, evening)",
+   "what": "Book Hanoi → HCMC (20 Nov, evening)",
+   "date": "2026-11-13",
+   "ts": "2026-11-13T12:02:54.374Z"
   }
  ]
 }
