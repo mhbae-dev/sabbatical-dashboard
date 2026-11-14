@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-14T08:42:08.047Z",
+ "updated": "2026-11-14T09:22:48.814Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2144,6 +2144,19 @@
    "note": "Cash Withdrawral",
    "ts": "2026-11-14T08:42:06.163Z",
    "fund": "spread"
+  },
+  {
+   "id": "mwg76k52s7te",
+   "date": "2026-11-14",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 12.31,
+   "currency": "GBP",
+   "gbp": 12.31,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-11-14T09:22:47.030Z"
   }
  ]
 }
