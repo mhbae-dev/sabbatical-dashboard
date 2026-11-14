@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-14T05:05:56.805Z",
+ "updated": "2026-11-14T08:42:08.047Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2129,6 +2129,20 @@
    "rate": 1,
    "note": "",
    "ts": "2026-11-14T05:05:54.276Z",
+   "fund": "spread"
+  },
+  {
+   "id": "mwg5q8r6kcya",
+   "date": "2026-11-14",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 89.88,
+   "currency": "GBP",
+   "gbp": 89.88,
+   "rate": 1,
+   "note": "Cash Withdrawral",
+   "ts": "2026-11-14T08:42:06.163Z",
    "fund": "spread"
   }
  ]
