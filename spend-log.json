@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16T14:13:07.008Z",
+ "updated": "2026-11-16T14:13:29.440Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2263,6 +2263,20 @@
    "rate": 1,
    "note": "Coffee class",
    "ts": "2026-11-16T14:13:05.835Z",
+   "fund": "spread"
+  },
+  {
+   "id": "mwjcg3d66uuo",
+   "date": "2026-11-17",
+   "cat": "other",
+   "kind": "activities",
+   "pay": "card",
+   "amount": 17.58,
+   "currency": "GBP",
+   "gbp": 17.58,
+   "rate": 1,
+   "note": "Food tour",
+   "ts": "2026-11-16T14:13:28.458Z",
    "fund": "spread"
   }
  ]
