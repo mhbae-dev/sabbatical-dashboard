@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16T14:12:25.050Z",
+ "updated": "2026-11-16T14:13:07.008Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2250,6 +2250,20 @@
    "rate": 1,
    "note": "",
    "ts": "2026-11-16T12:59:10.477Z"
+  },
+  {
+   "id": "mwjcflwr2ct9",
+   "date": "2026-11-16",
+   "cat": "other",
+   "kind": "activities",
+   "pay": "card",
+   "amount": 16.65,
+   "currency": "GBP",
+   "gbp": 16.65,
+   "rate": 1,
+   "note": "Coffee class",
+   "ts": "2026-11-16T14:13:05.835Z",
+   "fund": "spread"
   }
  ]
 }
