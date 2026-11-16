@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16T14:13:29.440Z",
+ "updated": "2026-11-16T14:14:47.052Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2277,6 +2277,20 @@
    "rate": 1,
    "note": "Food tour",
    "ts": "2026-11-16T14:13:28.458Z",
+   "fund": "spread"
+  },
+  {
+   "id": "mwjchr8cbnhq",
+   "date": "2026-11-15",
+   "cat": "shop",
+   "kind": "misc",
+   "pay": "card",
+   "amount": 16.33,
+   "currency": "GBP",
+   "gbp": 16.33,
+   "rate": 1,
+   "note": "Cash",
+   "ts": "2026-11-16T14:14:46.044Z",
    "fund": "spread"
   }
  ]
