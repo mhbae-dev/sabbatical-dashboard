@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16T14:07:10.651Z",
+ "updated": "2026-11-16T14:12:25.050Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2134,8 +2134,8 @@
   {
    "id": "mwg5q8r6kcya",
    "date": "2026-11-14",
-   "cat": "food",
-   "kind": "meals",
+   "cat": "shop",
+   "kind": "essentials",
    "pay": "card",
    "amount": 89.88,
    "currency": "GBP",
@@ -2143,7 +2143,8 @@
    "rate": 1,
    "note": "Cash Withdrawral",
    "ts": "2026-11-14T08:42:06.163Z",
-   "fund": "spread"
+   "fund": "spread",
+   "edited": "2026-11-16T14:12:23.725Z"
   },
   {
    "id": "mwg76k52s7te",
