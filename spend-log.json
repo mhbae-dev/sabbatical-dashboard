@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16T14:14:47.052Z",
+ "updated": "2026-11-16T14:19:58.737Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2292,6 +2292,19 @@
    "note": "Cash",
    "ts": "2026-11-16T14:14:46.044Z",
    "fund": "spread"
+  },
+  {
+   "id": "mwjcoetubenp",
+   "date": "2026-11-16",
+   "cat": "flights",
+   "kind": "flight",
+   "pay": "card",
+   "amount": 13.55,
+   "currency": "GBP",
+   "gbp": 13.55,
+   "rate": 1,
+   "note": "Flight Change fee",
+   "ts": "2026-11-16T14:19:56.562Z"
   }
  ]
 }
