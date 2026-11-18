@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-18T09:29:08.384Z",
+ "updated": "2026-11-18T09:29:16.760Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2365,6 +2365,22 @@
    "what": "Confirm Ha Long cruise refund (Marvel Travel / La Regina)",
    "date": "2026-11-18",
    "ts": "2026-11-18T09:29:07.376Z"
+  },
+  {
+   "id": "mwlx6arbbt8f",
+   "cat": "taskDone",
+   "key": "todo:Confirm HAN → SGN change fee + fare difference",
+   "what": "Confirm HAN → SGN change fee + fare difference",
+   "date": "2026-11-18",
+   "ts": "2026-11-18T09:29:15.767Z"
+  },
+  {
+   "id": "mwlx6b9t7oez",
+   "cat": "taskDone",
+   "key": "todo:Check bag weight for HAN → SGN (20 kg allowance) – or buy extra baggage",
+   "what": "Check bag weight for HAN → SGN (20 kg allowance) – or buy extra baggage",
+   "date": "2026-11-18",
+   "ts": "2026-11-18T09:29:16.433Z"
   }
  ]
 }
