@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-18T09:29:16.760Z",
+ "updated": "2026-11-18T09:29:23.444Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2381,6 +2381,14 @@
    "what": "Check bag weight for HAN → SGN (20 kg allowance) – or buy extra baggage",
    "date": "2026-11-18",
    "ts": "2026-11-18T09:29:16.433Z"
+  },
+  {
+   "id": "mwlx6fyyk516",
+   "cat": "taskDone",
+   "key": "todo:Ask M Village if I can keep the same room 19–26 Nov",
+   "what": "Ask M Village if I can keep the same room 19–26 Nov",
+   "date": "2026-11-18",
+   "ts": "2026-11-18T09:29:22.522Z"
   }
  ]
 }
