@@ -1150,6 +1150,7 @@ function parseWorkbook(buf){
   rowsUntilTotal("Itinerary",5).forEach(r=>{
     if (!val("Itinerary","A"+r)) return;
     const nights = Math.round(num("Itinerary","D"+r));
+    if (nights<=0) return; // a cancelled stop kept on the sheet with 0 nights (e.g. the Ha Long cruise)
     const H = k => hasHotels ? val("Hotels", k+r) : null;
     data.stops.push({
       country: val("Itinerary","A"+r), where: val("Itinerary","B"+r), start: d, nights,
