@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-18T08:57:31.922Z",
+ "updated": "2026-11-18T09:29:08.384Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2357,6 +2357,14 @@
    "rate": 1,
    "note": "",
    "ts": "2026-11-18T08:57:30.863Z"
+  },
+  {
+   "id": "mwlx64a8b9l7",
+   "cat": "taskDone",
+   "key": "todo:Confirm Ha Long cruise refund (Marvel Travel / La Regina)",
+   "what": "Confirm Ha Long cruise refund (Marvel Travel / La Regina)",
+   "date": "2026-11-18",
+   "ts": "2026-11-18T09:29:07.376Z"
   }
  ]
 }
