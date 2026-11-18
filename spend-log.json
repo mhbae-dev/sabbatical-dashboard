@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-18T03:23:57.750Z",
+ "updated": "2026-11-18T04:23:50.897Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2344,19 +2344,6 @@
    "rate": 1,
    "note": "",
    "ts": "2026-11-17T12:58:58.543Z"
-  },
-  {
-   "id": "mwlk4hsu9z14",
-   "date": "2026-11-18",
-   "cat": "flights",
-   "kind": "flight",
-   "pay": "card",
-   "amount": 5,
-   "currency": "GBP",
-   "gbp": 5,
-   "rate": 1,
-   "note": "Seat selection",
-   "ts": "2026-11-18T03:23:56.575Z"
   }
  ]
 }
