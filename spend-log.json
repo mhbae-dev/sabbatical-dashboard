@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-18T09:29:23.444Z",
+ "updated": "2026-11-18T12:25:24.612Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2389,6 +2389,19 @@
    "what": "Ask M Village if I can keep the same room 19–26 Nov",
    "date": "2026-11-18",
    "ts": "2026-11-18T09:29:22.522Z"
+  },
+  {
+   "id": "mwm3gswswhig",
+   "date": "2026-11-18",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 4.56,
+   "currency": "GBP",
+   "gbp": 4.56,
+   "rate": 1,
+   "note": "Snack",
+   "ts": "2026-11-18T12:25:23.548Z"
   }
  ]
 }
