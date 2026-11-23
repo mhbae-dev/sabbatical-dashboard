@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23T04:23:19.021Z",
+ "updated": "2026-11-23T06:57:02.589Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2753,6 +2753,19 @@
    "what": "Book Chiang Mai → Seoul (14 Dec)",
    "date": "2026-11-23",
    "ts": "2026-11-23T04:23:17.293Z"
+  },
+  {
+   "id": "mwswxs2ibmmf",
+   "date": "2026-11-23",
+   "cat": "food",
+   "kind": "meals",
+   "pay": "card",
+   "amount": 4.4,
+   "currency": "GBP",
+   "gbp": 4.4,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-11-23T06:57:01.530Z"
   }
  ]
 }
