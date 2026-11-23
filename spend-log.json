@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-22T14:47:45.513Z",
+ "updated": "2026-11-23T04:23:12.518Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2729,6 +2729,14 @@
    "rate": 1,
    "note": "Taco",
    "ts": "2026-11-22T14:47:44.788Z"
+  },
+  {
+   "id": "mwsrfy8aw74y",
+   "cat": "taskDone",
+   "key": "todo:SG Arrival Card – each Singapore crossing",
+   "what": "SG Arrival Card – each Singapore crossing",
+   "date": "2026-11-23",
+   "ts": "2026-11-23T04:23:11.626Z"
   }
  ]
 }
