@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23T04:23:16.397Z",
+ "updated": "2026-11-23T04:23:19.021Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2745,6 +2745,14 @@
    "what": "Book KL + Johor stays",
    "date": "2026-11-23",
    "ts": "2026-11-23T04:23:15.331Z"
+  },
+  {
+   "id": "mwsrg2lplkqt",
+   "cat": "taskDone",
+   "key": "todo:Book Chiang Mai → Seoul (14 Dec)",
+   "what": "Book Chiang Mai → Seoul (14 Dec)",
+   "date": "2026-11-23",
+   "ts": "2026-11-23T04:23:17.293Z"
   }
  ]
 }
