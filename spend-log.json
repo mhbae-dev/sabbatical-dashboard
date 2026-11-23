@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23T04:23:12.518Z",
+ "updated": "2026-11-23T04:23:16.397Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -2737,6 +2737,14 @@
    "what": "SG Arrival Card – each Singapore crossing",
    "date": "2026-11-23",
    "ts": "2026-11-23T04:23:11.626Z"
+  },
+  {
+   "id": "mwsrg137lg9i",
+   "cat": "taskDone",
+   "key": "todo:Book KL + Johor stays",
+   "what": "Book KL + Johor stays",
+   "date": "2026-11-23",
+   "ts": "2026-11-23T04:23:15.331Z"
   }
  ]
 }
