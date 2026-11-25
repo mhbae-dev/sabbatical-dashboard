@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25T04:17:28.809Z",
+ "updated": "2026-11-25T05:55:47.955Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -3000,6 +3000,19 @@
    "rate": 1,
    "note": "Airport",
    "ts": "2026-11-25T04:17:27.961Z"
+  },
+  {
+   "id": "mwvpmqagie7q",
+   "date": "2026-11-25",
+   "cat": "shop",
+   "kind": "shopping",
+   "pay": "card",
+   "amount": 8.7,
+   "currency": "GBP",
+   "gbp": 8.7,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-11-25T05:55:47.224Z"
   }
  ]
 }
