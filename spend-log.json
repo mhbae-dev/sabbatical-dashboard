@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-27T10:24:35.772Z",
+ "updated": "2026-11-28T07:00:59.511Z",
  "entries": [
   {
    "id": "mvfusx39nkux",
@@ -3147,6 +3147,19 @@
    "rate": 1,
    "note": "",
    "ts": "2026-11-27T10:24:35.202Z"
+  },
+  {
+   "id": "mx02a4etgm2p",
+   "date": "2026-11-28",
+   "cat": "other",
+   "kind": "activities",
+   "pay": "card",
+   "amount": 9.75,
+   "currency": "GBP",
+   "gbp": 9.75,
+   "rate": 1,
+   "note": "",
+   "ts": "2026-11-28T07:00:58.709Z"
   }
  ]
 }
